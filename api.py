@@ -93,10 +93,21 @@ def baseline():
 
         # ------------------ OFFER ------------------
         elif task == "offer":
+            from env import check_negotiation_eligibility
             sorted_candidates = sorted(state.candidates, key=lambda c: c.expected_salary)
 
             for candidate in sorted_candidates:
-                action = {"type": "offer", "candidate_id": candidate.id}
+                eligibility = check_negotiation_eligibility(
+                    candidate.skills,
+                    list(state.job_description.required_skills)
+                )
+
+                if eligibility["negotiable"]:
+                    action = {"type": "negotiate", "candidate_id": candidate.id}
+                elif eligibility["eligible"]:
+                    action = {"type": "offer", "candidate_id": candidate.id}
+                else:
+                    continue
 
                 _, reward, done, _ = env.step(action)
                 total_reward += reward
@@ -256,12 +267,24 @@ def eval_all():
 
         # ------------------ OFFER ------------------
         elif task_type == "offer":
+            from env import check_negotiation_eligibility
             sorted_candidates = sorted(
                 state.candidates,
                 key=lambda c: c.expected_salary
             )
             for candidate in sorted_candidates:
-                action = {"type": "offer", "candidate_id": candidate.id}
+                eligibility = check_negotiation_eligibility(
+                    candidate.skills,
+                    list(state.job_description.required_skills)
+                )
+
+                if eligibility["negotiable"]:
+                    action = {"type": "negotiate", "candidate_id": candidate.id}
+                elif eligibility["eligible"]:
+                    action = {"type": "offer", "candidate_id": candidate.id}
+                else:
+                    continue
+
                 _, reward, done, _ = env.step(action)
                 total_reward += reward
                 steps_taken += 1

@@ -695,7 +695,10 @@ class HireLoopEnv:
         self.state.step_count += 1
 
         # Done conditions
-        if self.state.step_count >= self.max_steps or len(self.state.offers_made) >= len(self.state.candidates):
+        current_spend = sum(o.get("actual_salary", 0) for o in (self.state.offers_made or []))
+        over_budget = current_spend > (self.state.budget * 1.5)
+
+        if self.state.step_count >= self.max_steps or len(self.state.offers_made) >= len(self.state.candidates) or over_budget:
             done = True
             final_score = self.compute_final_score()
             info["final_score"] = final_score
@@ -713,6 +716,10 @@ class HireLoopEnv:
         info["step_count"] = self.state.step_count
         info["budget"] = self.state.budget
         info["offers_count"] = len(self.state.offers_made)
+        if self.state.task_type == "offer":
+            state_dict = self.state.model_dump()
+            state_dict["negotiation_hints"] = getattr(self, "negotiation_hints", {})
+            return state_dict, reward, done, info
         return self.state, reward, done, info
 
     # -----------------------------------------------------------------------
