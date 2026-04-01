@@ -1,3 +1,12 @@
+---
+title: HireLoop
+emoji: 🔁
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # HireLoop: A Multi-Step Hiring Environment for Reinforcement Learning
 
 ## Overview
