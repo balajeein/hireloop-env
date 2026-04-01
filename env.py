@@ -151,7 +151,7 @@ class HireLoopEnv:
         self.correct_shortlist: List[str] = []
         self.last_action = None
         self.random_seed = 42
-        random.seed(self.random_seed)
+        self.rng = random.Random(self.random_seed)
 
         # Load scenarios from JSON file
         import json
@@ -166,7 +166,7 @@ class HireLoopEnv:
     def reset(self) -> HireLoopState:
 
         # Randomly select task type
-        task_type = random.choice(["resume", "offer", "communication"])
+        task_type = self.rng.choice(["resume", "offer", "communication"])
 
         if task_type == "resume":
             return self._reset_resume()
@@ -189,7 +189,7 @@ class HireLoopEnv:
     # -----------------------------------------------------------------------
     def _reset_resume(self) -> HireLoopState:
     # Pick a random scenario from scenarios.json
-        scenario = random.choice(self.scenarios)
+        scenario = self.rng.choice(self.scenarios)
 
         job = JobDescription(
             role=scenario["job"]["role"],
@@ -234,7 +234,7 @@ class HireLoopEnv:
     # -----------------------------------------------------------------------
     def _reset_offer(self) -> HireLoopState:
         # Pick a random scenario from scenarios.json
-        scenario = random.choice(self.scenarios)
+        scenario = self.rng.choice(self.scenarios)
 
         job = JobDescription(
             role=scenario["job"]["role"],
@@ -309,7 +309,7 @@ class HireLoopEnv:
     # -----------------------------------------------------------------------
     def _reset_communication(self) -> HireLoopState:
         # Pick a random scenario from scenarios.json
-        scenario = random.choice(self.scenarios)
+        scenario = self.rng.choice(self.scenarios)
 
         job = JobDescription(
             role=scenario["job"]["role"],
@@ -546,6 +546,7 @@ class HireLoopEnv:
             info["error"] = "Duplicate offer."
             info["explanation"] = f"Duplicate offer for candidate {candidate_id}. Already offered."
             info["task_type"] = self.state.task_type
+            self.state.step_count += 1
             info["step_count"] = self.state.step_count
             info["budget"] = self.state.budget
             info["offers_count"] = len(self.state.offers_made)
