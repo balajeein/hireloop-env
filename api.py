@@ -235,8 +235,7 @@ def eval_all():
     for task_type in tasks:
 
         # Reset for this task
-        env.reset_with_task(task_type)
-        state = env.state_view()
+        state = env.reset_with_task(task_type)
         total_reward = 0.0
         steps_taken = 0
 
