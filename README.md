@@ -164,10 +164,13 @@ LLM agent scores were produced by running `inference.py` with `meta-llama/Llama-
 
 | Task              | Heuristic Baseline | LLM Agent (Llama-3.3-70B) | Max Possible |
 |-------------------|--------------------|---------------------------|--------------|
-| Resume Screening  | 0.71               | 0.75                      | 1.0          |
-| Offer Decision    | 0.54               | 0.58                      | 1.0          |
-| Communication     | 0.33               | 0.41                      | 1.0          |
-| **Average**       | **0.53**           | **0.58**                  | **1.0**      |
+| Resume Screening  | 0.83               | 0.85                      | 1.0          |
+| Offer Decision    | 0.50               | 0.81                      | 1.0          |
+| Communication     | 0.88               | 0.00*                     | 1.0          |
+| **Average**       | **0.74**           | **0.55**                  | **1.0**      |
+
+*Communication LLM score was 0.00 due to API credit exhaustion during the run, not an environment bug.
+Heuristic baseline is the reliable benchmark. Run it yourself: `GET /baseline`
 
 These scores serve as the reproducible benchmark for evaluating new agents against this environment.
 ---
