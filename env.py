@@ -670,7 +670,7 @@ class HireLoopEnv:
             reward += efficiency * 0.3
         else:
             overage = (new_spend - self.state.budget) / self.state.budget
-            reward -= overage * 1.0
+            reward -= overage * 2.0
 
         # Experience bonus
         if candidate.years_experience >= 3:
@@ -695,10 +695,7 @@ class HireLoopEnv:
         self.state.step_count += 1
 
         # Done conditions
-        current_spend = sum(o.get("actual_salary", 0) for o in (self.state.offers_made or []))
-        over_budget = current_spend > (self.state.budget * 1.5)
-
-        if self.state.step_count >= self.max_steps or len(self.state.offers_made) >= len(self.state.candidates) or over_budget:
+        if self.state.step_count >= self.max_steps or len(self.state.offers_made) >= len(self.state.candidates):
             done = True
             final_score = self.compute_final_score()
             info["final_score"] = final_score
