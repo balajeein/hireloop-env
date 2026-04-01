@@ -21,7 +21,7 @@ tasks:
 
   - name: communication_drafting
     difficulty: hard
-    max_steps: 8
+    max_steps: 10
     description: "Write safe, professional rejection emails. Includes adversarial input."
 
 action_space:

@@ -2,7 +2,7 @@ from fastapi import FastAPI, Query
 from typing import Dict, Optional
 
 from env import HireLoopEnv
-
+from models import Action  
 app = FastAPI()
 
 env = HireLoopEnv()
@@ -40,8 +40,8 @@ def reset(task: Optional[str] = Query(None, description="Task type: resume, offe
 # STEP — accepts action dict, routes based on current task_type
 # -----------------------------------------------------------------------
 @app.post("/step")
-def step(action: Dict):
-    obs, reward, done, info = env.step(action)
+def step(action: Action):
+    obs, reward, done, info = env.step(action.model_dump())
 
     return {
         "observation": obs,
@@ -69,7 +69,6 @@ def baseline():
     results = []
 
     for task in tasks:
-        env.reset_with_task(task)
         state = env.reset_with_task(task)
         total_reward = 0
 
@@ -204,7 +203,7 @@ def tasks():
                 "difficulty": "hard",
                 "expected_score": "~0.30",
                 "objective": "Write professional and safe rejection emails. Includes 1 adversarial candidate.",
-                "max_steps": 5,
+                "max_steps": 10,
                 "num_candidates": 8,
                 "reward_signals": [
                     "+polite_tone",

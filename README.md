@@ -255,6 +255,45 @@ It shows understanding of reward shaping, environment dynamics, API design, and 
 It also reflects iterative improvement, where flaws were identified and corrected to make the system more robust.
 
 ---
+---
+
+## Known Limitations
+
+### Single-User Design
+
+The current implementation uses a global environment singleton:
+```python
+env = HireLoopEnv()  # Shared across all API requests
+```
+
+**Impact:**
+- Designed for single-user testing and evaluation
+- Concurrent API requests from multiple users will interfere with each other
+- Not suitable for production multi-user deployment
+
+**For Hackathon Evaluation:**
+This design is intentional for simplicity and demonstration purposes. The environment is deterministic and fully reproducible when used sequentially.
+
+**For Production Use:**
+Consider using dependency injection to create a new environment instance per request:
+```python
+from fastapi import Depends
+
+def get_env():
+    return HireLoopEnv()
+
+@app.get("/reset")
+def reset(env: HireLoopEnv = Depends(get_env)):
+    state = env.reset()
+    return {"state": state}
+```
+
+### Validation
+
+The environment validates all actions internally with clear error messages. Invalid actions receive negative rewards and do not advance the episode state (except incrementing step_count).
+
+---
+
 
 ## Final Note
 

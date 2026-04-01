@@ -412,6 +412,7 @@ class HireLoopEnv:
             reward -= 0.5
             info["explanation"] = f"Invalid candidate ID '{candidate_id}'. Not found in candidate pool."
             info["task_type"] = self.state.task_type
+            self.state.step_count += 1 
             info["step_count"] = self.state.step_count
 
             reward = max(-1.0, min(1.0, reward))
@@ -516,6 +517,7 @@ class HireLoopEnv:
             reward -= 0.5
             info["error"] = "Invalid action type. Use 'offer' or 'negotiate'."
             info["task_type"] = self.state.task_type
+            self.state.step_count += 1
             info["step_count"] = self.state.step_count
             info["budget"] = self.state.budget
             info["offers_count"] = len(self.state.offers_made)
@@ -528,6 +530,7 @@ class HireLoopEnv:
             reward -= 0.5
             info["error"] = f"Candidate {candidate_id} not found."
             info["task_type"] = self.state.task_type
+            self.state.step_count += 1
             info["step_count"] = self.state.step_count
             info["budget"] = self.state.budget
             info["offers_count"] = len(self.state.offers_made)
@@ -704,20 +707,20 @@ class HireLoopEnv:
         reward = max(-1.0, min(1.0, reward))
         reward = round(reward, 4)
 
+        # Append budget context to existing explanation (don't overwrite negotiation details)
         if new_spend <= self.state.budget:
-            info["explanation"] = f"Offered candidate {candidate_id} (salary {candidate.expected_salary}) within budget. Remaining: {self.state.budget - new_spend}."
+            budget_note = f" Budget remaining: {self.state.budget - new_spend}."
         else:
-            info["explanation"] = f"Offered candidate {candidate_id} (salary {candidate.expected_salary}) but exceeded budget by {new_spend - self.state.budget}."
+            budget_note = f" WARNING: Exceeded budget by {new_spend - self.state.budget}."
+        info["explanation"] = info.get("explanation", "") + budget_note
 
         info["task_type"] = self.state.task_type
         info["step_count"] = self.state.step_count
         info["budget"] = self.state.budget
         info["offers_count"] = len(self.state.offers_made)
-        if self.state.task_type == "offer":
-            state_dict = self.state.model_dump()
-            state_dict["negotiation_hints"] = getattr(self, "negotiation_hints", {})
-            return state_dict, reward, done, info
-        return self.state, reward, done, info
+        state_dict = self.state.model_dump()
+        state_dict["negotiation_hints"] = getattr(self, "negotiation_hints", {})
+        return state_dict, reward, done, info
 
     # -----------------------------------------------------------------------
     # STEP — Communication Drafting
@@ -736,6 +739,7 @@ class HireLoopEnv:
             reward -= 0.5
             info["error"] = "Invalid action type. Use 'write_email'."
             info["task_type"] = self.state.task_type
+            self.state.step_count += 1
             info["step_count"] = self.state.step_count
             info["emails_count"] = len(self.state.emails_sent)
             reward = max(-1.0, min(1.0, reward))
@@ -749,6 +753,7 @@ class HireLoopEnv:
             info["error"] = f"Candidate {candidate_id} not found."
             info["explanation"] = f"Invalid candidate ID '{candidate_id}'. Not found in candidate pool."
             info["task_type"] = self.state.task_type
+            self.state.step_count += 1
             info["step_count"] = self.state.step_count
             info["emails_count"] = len(self.state.emails_sent)
             reward = max(-1.0, min(1.0, reward))
@@ -762,6 +767,7 @@ class HireLoopEnv:
             info["error"] = "Duplicate email."
             info["explanation"] = f"Duplicate email for candidate {candidate_id}. Already sent."
             info["task_type"] = self.state.task_type
+            self.state.step_count += 1
             info["step_count"] = self.state.step_count
             info["emails_count"] = len(self.state.emails_sent)
             reward = max(-1.0, min(1.0, reward))
