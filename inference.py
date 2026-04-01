@@ -47,12 +47,21 @@ def get_llm_action(state: dict, task_type: str) -> dict:
     """Ask the LLM what action to take given current state."""
     state_str = json.dumps(state, indent=2, default=str)
 
+    already_shortlisted = state.get("shortlisted", [])
+    already_rejected = state.get("rejected", [])
+    all_ids = [c["id"] for c in state.get("candidates", [])]
+    remaining = [cid for cid in all_ids if cid not in already_shortlisted and cid not in already_rejected]
+
     prompt = f"""Current environment state:
-{state_str}
+    {state_str}
 
-Task type: {task_type}
+    Task type: {task_type}
+    Already shortlisted: {already_shortlisted}
+    Already rejected: {already_rejected}
+    Remaining candidates to process: {remaining}
 
-What is your next action? Respond with a single JSON object only."""
+    Pick from remaining candidates only. Do not repeat actions on already processed candidates.
+    What is your next action? Respond with a single JSON object only."""
 
     try:
         response = client.chat.completions.create(

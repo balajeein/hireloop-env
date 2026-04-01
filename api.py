@@ -70,7 +70,7 @@ def baseline():
 
     for task in tasks:
         env.reset_with_task(task)
-        state = env.state_view()
+        state = env.reset_with_task(task)
         total_reward = 0
 
         # ------------------ RESUME ------------------
