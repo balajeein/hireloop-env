@@ -1,0 +1,278 @@
+[
+  {
+    "id": "scenario_1",
+    "job": {
+      "role": "Python ML Engineer",
+      "required_skills": ["python", "ml"],
+      "max_salary": 10,
+      "seniority": "mid"
+    },
+    "candidates": [
+      {"id": "1", "name": "Alice", "skills": ["python", "ml"], "years_experience": 3, "expected_salary": 9, "gender": "female", "nationality": "indian"},
+      {"id": "2", "name": "Bob", "skills": ["java"], "years_experience": 4, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "3", "name": "Charlie", "skills": ["python"], "years_experience": 2, "expected_salary": 6, "gender": "male", "nationality": "british"},
+      {"id": "4", "name": "David", "skills": ["ml", "python"], "years_experience": 5, "expected_salary": 10, "gender": "male", "nationality": "indian"},
+      {"id": "5", "name": "Eve", "skills": ["c++"], "years_experience": 3, "expected_salary": 5, "gender": "female", "nationality": "german"},
+      {"id": "6", "name": "Frank", "skills": ["python", "ml", "deep_learning"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "american"},
+      {"id": "7", "name": "Grace", "skills": ["python"], "years_experience": 1, "expected_salary": 4, "gender": "female", "nationality": "chinese"},
+      {"id": "8", "name": "Hank", "skills": ["java", "sql"], "years_experience": 7, "expected_salary": 8, "gender": "male", "nationality": "american"},
+      {"id": "9", "name": "Ivy", "skills": ["ml", "statistics"], "years_experience": 4, "expected_salary": 7, "gender": "female", "nationality": "british"},
+      {"id": "10", "name": "Jack", "skills": ["python", "ml", "nlp"], "years_experience": 8, "expected_salary": 10, "gender": "male", "nationality": "canadian"}
+    ],
+    "correct_shortlist": ["6", "10", "4", "1"]
+  },
+  {
+    "id": "scenario_2",
+    "job": {
+      "role": "Frontend React Developer",
+      "required_skills": ["react", "javascript"],
+      "max_salary": 10,
+      "seniority": "junior"
+    },
+    "candidates": [
+      {"id": "1", "name": "Sara", "skills": ["react", "javascript", "css"], "years_experience": 2, "expected_salary": 6, "gender": "female", "nationality": "brazilian"},
+      {"id": "2", "name": "Tom", "skills": ["angular", "typescript"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "3", "name": "Uma", "skills": ["react", "javascript"], "years_experience": 1, "expected_salary": 5, "gender": "female", "nationality": "indian"},
+      {"id": "4", "name": "Vikram", "skills": ["vue", "javascript"], "years_experience": 2, "expected_salary": 6, "gender": "male", "nationality": "indian"},
+      {"id": "5", "name": "Wendy", "skills": ["react", "javascript", "node"], "years_experience": 4, "expected_salary": 9, "gender": "female", "nationality": "canadian"},
+      {"id": "6", "name": "Xander", "skills": ["java", "spring"], "years_experience": 5, "expected_salary": 8, "gender": "male", "nationality": "south_african"},
+      {"id": "7", "name": "Yara", "skills": ["javascript", "react"], "years_experience": 2, "expected_salary": 6, "gender": "female", "nationality": "egyptian"},
+      {"id": "8", "name": "Zane", "skills": ["python", "django"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "british"},
+      {"id": "9", "name": "Amy", "skills": ["react", "redux", "javascript"], "years_experience": 3, "expected_salary": 8, "gender": "female", "nationality": "american"},
+      {"id": "10", "name": "Ben", "skills": ["css", "html"], "years_experience": 1, "expected_salary": 4, "gender": "male", "nationality": "australian"}
+    ],
+    "correct_shortlist": ["1", "3", "5", "7", "9"]
+  },
+  {
+    "id": "scenario_3",
+    "job": {
+      "role": "Data Engineer",
+      "required_skills": ["sql", "spark"],
+      "max_salary": 10,
+      "seniority": "senior"
+    },
+    "candidates": [
+      {"id": "1", "name": "Carlos", "skills": ["sql", "spark", "hadoop"], "years_experience": 7, "expected_salary": 10, "gender": "male", "nationality": "mexican"},
+      {"id": "2", "name": "Diana", "skills": ["sql"], "years_experience": 3, "expected_salary": 6, "gender": "female", "nationality": "american"},
+      {"id": "3", "name": "Ethan", "skills": ["python", "ml"], "years_experience": 4, "expected_salary": 8, "gender": "male", "nationality": "british"},
+      {"id": "4", "name": "Fatima", "skills": ["sql", "spark", "kafka"], "years_experience": 6, "expected_salary": 10, "gender": "female", "nationality": "moroccan"},
+      {"id": "5", "name": "George", "skills": ["spark", "scala"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "greek"},
+      {"id": "6", "name": "Hannah", "skills": ["java", "spring"], "years_experience": 4, "expected_salary": 7, "gender": "female", "nationality": "german"},
+      {"id": "7", "name": "Ivan", "skills": ["sql", "spark"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "russian"},
+      {"id": "8", "name": "Julia", "skills": ["r", "statistics"], "years_experience": 3, "expected_salary": 6, "gender": "female", "nationality": "polish"},
+      {"id": "9", "name": "Kevin", "skills": ["sql", "postgres", "spark"], "years_experience": 8, "expected_salary": 10, "gender": "male", "nationality": "canadian"},
+      {"id": "10", "name": "Laura", "skills": ["excel", "powerbi"], "years_experience": 2, "expected_salary": 5, "gender": "female", "nationality": "spanish"}
+    ],
+    "correct_shortlist": ["1", "4", "7", "9"]
+  },
+  {
+    "id": "scenario_4",
+    "job": {
+      "role": "DevOps Engineer",
+      "required_skills": ["docker", "kubernetes"],
+      "max_salary": 10,
+      "seniority": "mid"
+    },
+    "candidates": [
+      {"id": "1", "name": "Mike", "skills": ["docker", "kubernetes", "terraform"], "years_experience": 5, "expected_salary": 10, "gender": "male", "nationality": "american"},
+      {"id": "2", "name": "Nina", "skills": ["docker", "linux"], "years_experience": 3, "expected_salary": 7, "gender": "female", "nationality": "ukrainian"},
+      {"id": "3", "name": "Omar", "skills": ["kubernetes", "helm", "docker"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "egyptian"},
+      {"id": "4", "name": "Priya", "skills": ["aws", "terraform"], "years_experience": 4, "expected_salary": 8, "gender": "female", "nationality": "indian"},
+      {"id": "5", "name": "Quinn", "skills": ["docker", "kubernetes"], "years_experience": 4, "expected_salary": 9, "gender": "non_binary", "nationality": "canadian"},
+      {"id": "6", "name": "Raj", "skills": ["linux", "bash"], "years_experience": 2, "expected_salary": 5, "gender": "male", "nationality": "indian"},
+      {"id": "7", "name": "Sofia", "skills": ["java", "spring"], "years_experience": 5, "expected_salary": 8, "gender": "female", "nationality": "argentinian"},
+      {"id": "8", "name": "Tyler", "skills": ["docker", "kubernetes", "ci_cd"], "years_experience": 7, "expected_salary": 10, "gender": "male", "nationality": "american"},
+      {"id": "9", "name": "Uma", "skills": ["ansible", "puppet"], "years_experience": 3, "expected_salary": 6, "gender": "female", "nationality": "sri_lankan"},
+      {"id": "10", "name": "Victor", "skills": ["python", "flask"], "years_experience": 2, "expected_salary": 5, "gender": "male", "nationality": "portuguese"}
+    ],
+    "correct_shortlist": ["1", "3", "5", "8"]
+  },
+  {
+    "id": "scenario_5",
+    "job": {
+      "role": "Backend Java Developer",
+      "required_skills": ["java", "spring"],
+      "max_salary": 10,
+      "seniority": "mid"
+    },
+    "candidates": [
+      {"id": "1", "name": "Arjun", "skills": ["java", "spring"], "years_experience": 4, "expected_salary": 9, "gender": "male", "nationality": "indian"},
+      {"id": "2", "name": "Michael", "skills": ["java"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "3", "name": "Oliver", "skills": ["spring", "java"], "years_experience": 5, "expected_salary": 10, "gender": "male", "nationality": "british"},
+      {"id": "4", "name": "Sophia", "skills": ["python", "django"], "years_experience": 4, "expected_salary": 8, "gender": "female", "nationality": "canadian"},
+      {"id": "5", "name": "Lukas", "skills": ["java", "spring", "hibernate"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "german"},
+      {"id": "6", "name": "Ravi", "skills": ["spring"], "years_experience": 2, "expected_salary": 6, "gender": "male", "nationality": "indian"},
+      {"id": "7", "name": "Isabella", "skills": ["java", "spring"], "years_experience": 3, "expected_salary": 8, "gender": "female", "nationality": "italian"},
+      {"id": "8", "name": "Noah", "skills": ["node", "express"], "years_experience": 4, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "9", "name": "Chen Wei", "skills": ["java", "spring"], "years_experience": 7, "expected_salary": 10, "gender": "male", "nationality": "chinese"},
+      {"id": "10", "name": "Ava", "skills": ["react"], "years_experience": 2, "expected_salary": 5, "gender": "female", "nationality": "australian"}
+    ],
+    "correct_shortlist": ["9", "5", "3", "1", "7"]
+  },
+  {
+    "id": "scenario_6",
+    "job": {
+      "role": "Full Stack Developer",
+      "required_skills": ["javascript", "node"],
+      "max_salary": 10,
+      "seniority": "mid"
+    },
+    "candidates": [
+      {"id": "1", "name": "Ethan", "skills": ["javascript", "node"], "years_experience": 4, "expected_salary": 9, "gender": "male", "nationality": "american"},
+      {"id": "2", "name": "Rahul", "skills": ["javascript"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "indian"},
+      {"id": "3", "name": "Mateo", "skills": ["node", "javascript"], "years_experience": 5, "expected_salary": 10, "gender": "male", "nationality": "spanish"},
+      {"id": "4", "name": "Emma", "skills": ["react", "javascript"], "years_experience": 3, "expected_salary": 8, "gender": "female", "nationality": "british"},
+      {"id": "5", "name": "Liam", "skills": ["javascript", "node", "mongodb"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "canadian"},
+      {"id": "6", "name": "Ananya", "skills": ["node"], "years_experience": 2, "expected_salary": 6, "gender": "female", "nationality": "indian"},
+      {"id": "7", "name": "Lucas", "skills": ["javascript", "node"], "years_experience": 3, "expected_salary": 8, "gender": "male", "nationality": "brazilian"},
+      {"id": "8", "name": "Henry", "skills": ["python"], "years_experience": 4, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "9", "name": "Yuki", "skills": ["javascript", "node"], "years_experience": 7, "expected_salary": 10, "gender": "female", "nationality": "japanese"},
+      {"id": "10", "name": "Sofia", "skills": ["css"], "years_experience": 1, "expected_salary": 4, "gender": "female", "nationality": "argentinian"}
+    ],
+    "correct_shortlist": ["9", "5", "3", "1", "7"]
+  },
+  {
+    "id": "scenario_7",
+    "job": {
+      "role": "Android Developer",
+      "required_skills": ["kotlin", "android"],
+      "max_salary": 10,
+      "seniority": "junior"
+    },
+    "candidates": [
+      {"id": "1", "name": "Rohit", "skills": ["kotlin", "android"], "years_experience": 2, "expected_salary": 6, "gender": "male", "nationality": "indian"},
+      {"id": "2", "name": "Jack", "skills": ["java"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "3", "name": "Akira", "skills": ["kotlin", "android"], "years_experience": 3, "expected_salary": 8, "gender": "male", "nationality": "japanese"},
+      {"id": "4", "name": "Mia", "skills": ["flutter"], "years_experience": 2, "expected_salary": 6, "gender": "female", "nationality": "canadian"},
+      {"id": "5", "name": "Luca", "skills": ["kotlin", "android", "firebase"], "years_experience": 4, "expected_salary": 9, "gender": "male", "nationality": "italian"},
+      {"id": "6", "name": "Chen", "skills": ["android"], "years_experience": 2, "expected_salary": 6, "gender": "male", "nationality": "chinese"},
+      {"id": "7", "name": "Sara", "skills": ["kotlin", "android"], "years_experience": 1, "expected_salary": 5, "gender": "female", "nationality": "spanish"},
+      {"id": "8", "name": "Noah", "skills": ["react"], "years_experience": 2, "expected_salary": 5, "gender": "male", "nationality": "american"},
+      {"id": "9", "name": "Aria", "skills": ["kotlin", "android"], "years_experience": 3, "expected_salary": 7, "gender": "female", "nationality": "australian"},
+      {"id": "10", "name": "Vikram", "skills": ["java"], "years_experience": 2, "expected_salary": 6, "gender": "male", "nationality": "indian"}
+    ],
+    "correct_shortlist": ["5", "3", "9", "1", "7"]
+  },
+  {
+    "id": "scenario_8",
+    "job": {
+      "role": "Data Analyst",
+      "required_skills": ["sql", "excel"],
+      "max_salary": 10,
+      "seniority": "junior"
+    },
+    "candidates": [
+      {"id": "1", "name": "Priya", "skills": ["sql", "excel"], "years_experience": 2, "expected_salary": 6, "gender": "female", "nationality": "indian"},
+      {"id": "2", "name": "Daniel", "skills": ["sql"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "3", "name": "Sophie", "skills": ["excel", "sql"], "years_experience": 3, "expected_salary": 7, "gender": "female", "nationality": "british"},
+      {"id": "4", "name": "Carlos", "skills": ["powerbi"], "years_experience": 2, "expected_salary": 6, "gender": "male", "nationality": "mexican"},
+      {"id": "5", "name": "Wei", "skills": ["sql", "excel", "python"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "chinese"},
+      {"id": "6", "name": "Anya", "skills": ["excel"], "years_experience": 1, "expected_salary": 5, "gender": "female", "nationality": "russian"},
+      {"id": "7", "name": "Liam", "skills": ["sql", "excel"], "years_experience": 4, "expected_salary": 8, "gender": "male", "nationality": "canadian"},
+      {"id": "8", "name": "Fatima", "skills": ["sql", "excel"], "years_experience": 3, "expected_salary": 7, "gender": "female", "nationality": "moroccan"},
+      {"id": "9", "name": "Ethan", "skills": ["python"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "10", "name": "Isabella", "skills": ["excel", "sql"], "years_experience": 2, "expected_salary": 6, "gender": "female", "nationality": "italian"}
+    ],
+    "correct_shortlist": ["5", "7", "8", "3", "1", "10"]
+  },
+  {
+    "id": "scenario_9",
+    "job": {
+      "role": "iOS Developer",
+      "required_skills": ["swift", "ios"],
+      "max_salary": 10,
+      "seniority": "mid"
+    },
+    "candidates": [
+      {"id": "1", "name": "Aarav", "skills": ["swift", "ios"], "years_experience": 4, "expected_salary": 9, "gender": "male", "nationality": "indian"},
+      {"id": "2", "name": "Emily", "skills": ["objective_c"], "years_experience": 5, "expected_salary": 8, "gender": "female", "nationality": "american"},
+      {"id": "3", "name": "Liam", "skills": ["swift", "ios"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "canadian"},
+      {"id": "4", "name": "Noah", "skills": ["java"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "american"},
+      {"id": "5", "name": "Hiroshi", "skills": ["swift", "ios", "xcode"], "years_experience": 7, "expected_salary": 10, "gender": "male", "nationality": "japanese"},
+      {"id": "6", "name": "Sofia", "skills": ["swift"], "years_experience": 2, "expected_salary": 6, "gender": "female", "nationality": "spanish"},
+      {"id": "7", "name": "Aria", "skills": ["ios"], "years_experience": 3, "expected_salary": 7, "gender": "female", "nationality": "australian"},
+      {"id": "8", "name": "Lucas", "skills": ["swift", "ios"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "brazilian"},
+      {"id": "9", "name": "Chen Wei", "skills": ["swift", "ios"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "chinese"},
+      {"id": "10", "name": "Oliver", "skills": ["react"], "years_experience": 2, "expected_salary": 5, "gender": "male", "nationality": "british"}
+    ],
+    "correct_shortlist": ["5", "9", "3", "8", "1"]
+  },
+  {
+    "id": "scenario_10",
+    "job": {
+      "role": "Cybersecurity Analyst",
+      "required_skills": ["networking", "security"],
+      "max_salary": 10,
+      "seniority": "senior"
+    },
+    "candidates": [
+      {"id": "1", "name": "Raj", "skills": ["networking", "security"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "indian"},
+      {"id": "2", "name": "John", "skills": ["networking"], "years_experience": 4, "expected_salary": 8, "gender": "male", "nationality": "american"},
+      {"id": "3", "name": "Elena", "skills": ["security", "networking"], "years_experience": 7, "expected_salary": 10, "gender": "female", "nationality": "russian"},
+      {"id": "4", "name": "Carlos", "skills": ["ethical_hacking"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "mexican"},
+      {"id": "5", "name": "Wei", "skills": ["networking", "security", "cryptography"], "years_experience": 8, "expected_salary": 10, "gender": "male", "nationality": "chinese"},
+      {"id": "6", "name": "Fatima", "skills": ["security"], "years_experience": 3, "expected_salary": 7, "gender": "female", "nationality": "moroccan"},
+      {"id": "7", "name": "Lukas", "skills": ["networking", "security"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "german"},
+      {"id": "8", "name": "Sophia", "skills": ["python"], "years_experience": 4, "expected_salary": 8, "gender": "female", "nationality": "canadian"},
+      {"id": "9", "name": "Ahmed", "skills": ["networking", "security"], "years_experience": 7, "expected_salary": 10, "gender": "male", "nationality": "egyptian"},
+      {"id": "10", "name": "Isabella", "skills": ["excel"], "years_experience": 2, "expected_salary": 5, "gender": "female", "nationality": "italian"}
+    ],
+    "correct_shortlist": ["5", "3", "9", "1", "7"]
+  },
+  {
+    "id": "scenario_11",
+    "job": {
+      "role": "Full Stack Engineer",
+      "required_skills": ["javascript", "node", "react"],
+      "max_salary": 10,
+      "seniority": "senior"
+    },
+    "candidates": [
+      {"id": "1", "name": "Arjun", "skills": ["javascript", "node", "react"], "years_experience": 6, "expected_salary": 10, "gender": "male", "nationality": "indian"},
+      {"id": "2", "name": "Chloe", "skills": ["javascript", "react"], "years_experience": 4, "expected_salary": 8, "gender": "female", "nationality": "french"},
+      {"id": "3", "name": "Derek", "skills": ["python", "django"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "american"},
+      {"id": "4", "name": "Nora", "skills": ["javascript", "node", "react"], "years_experience": 7, "expected_salary": 10, "gender": "female", "nationality": "norwegian"},
+      {"id": "5", "name": "Kenji", "skills": ["node", "react"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "japanese"}
+    ],
+    "correct_shortlist": ["1", "4"]
+  },
+  {
+    "id": "scenario_12",
+    "job": {
+      "role": "Machine Learning Engineer",
+      "required_skills": ["python", "pytorch", "ml"],
+      "max_salary": 10,
+      "seniority": "senior"
+    },
+    "candidates": [
+      {"id": "1", "name": "Elena", "skills": ["python", "pytorch", "ml"], "years_experience": 8, "expected_salary": 10, "gender": "female", "nationality": "russian"},
+      {"id": "2", "name": "Sam", "skills": ["python", "ml"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "american"},
+      {"id": "3", "name": "Priya", "skills": ["python", "pytorch", "ml", "deep_learning"], "years_experience": 7, "expected_salary": 10, "gender": "female", "nationality": "indian"},
+      {"id": "4", "name": "Tobias", "skills": ["java", "spring"], "years_experience": 6, "expected_salary": 9, "gender": "male", "nationality": "german"},
+      {"id": "5", "name": "Mei", "skills": ["python", "tensorflow"], "years_experience": 4, "expected_salary": 8, "gender": "female", "nationality": "chinese"},
+      {"id": "6", "name": "Oscar", "skills": ["r", "statistics"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "swedish"},
+      {"id": "7", "name": "Aisha", "skills": ["python", "pytorch", "ml"], "years_experience": 6, "expected_salary": 10, "gender": "female", "nationality": "nigerian"}
+    ],
+    "correct_shortlist": ["1", "3", "7"]
+  },
+  {
+    "id": "scenario_13",
+    "job": {
+      "role": "Cloud Infrastructure Engineer",
+      "required_skills": ["aws", "terraform", "docker"],
+      "max_salary": 10,
+      "seniority": "mid"
+    },
+    "candidates": [
+      {"id": "1", "name": "Lars", "skills": ["aws", "terraform", "docker"], "years_experience": 5, "expected_salary": 10, "gender": "male", "nationality": "danish"},
+      {"id": "2", "name": "Zara", "skills": ["aws", "docker"], "years_experience": 4, "expected_salary": 9, "gender": "female", "nationality": "pakistani"},
+      {"id": "3", "name": "Felix", "skills": ["gcp", "kubernetes"], "years_experience": 5, "expected_salary": 9, "gender": "male", "nationality": "austrian"},
+      {"id": "4", "name": "Amara", "skills": ["aws", "terraform", "docker"], "years_experience": 6, "expected_salary": 10, "gender": "female", "nationality": "ghanaian"},
+      {"id": "5", "name": "Jin", "skills": ["azure", "terraform"], "years_experience": 3, "expected_salary": 7, "gender": "male", "nationality": "korean"},
+      {"id": "6", "name": "Isla", "skills": ["aws", "terraform", "docker"], "years_experience": 4, "expected_salary": 9, "gender": "female", "nationality": "scottish"},
+      {"id": "7", "name": "Ravi", "skills": ["linux", "bash"], "years_experience": 2, "expected_salary": 5, "gender": "male", "nationality": "indian"},
+      {"id": "8", "name": "Nadia", "skills": ["python", "flask"], "years_experience": 3, "expected_salary": 6, "gender": "female", "nationality": "algerian"}
+    ],
+    "correct_shortlist": ["1", "4", "6"]
+  }
+]
