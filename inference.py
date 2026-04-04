@@ -45,7 +45,8 @@ Rules:
 
 def get_llm_action(state: dict, task_type: str) -> dict:
     """Ask the LLM what action to take given current state."""
-    state_str = json.dumps(state, indent=2, default=str)
+    state_for_llm = {k: v for k, v in state.items() if k != "negotiation_hints"}
+    state_str = json.dumps(state_for_llm, indent=2, default=str)
 
     already_shortlisted = state.get("shortlisted", [])
     already_rejected = state.get("rejected", [])

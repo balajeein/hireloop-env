@@ -1,9 +1,19 @@
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 from fastapi import FastAPI, Query
 from typing import Dict, Optional
 
 from env import HireLoopEnv
 from models import Action  
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 env = HireLoopEnv()
 
@@ -21,6 +31,13 @@ def health():
         "tasks": ["resume", "offer", "communication"]
     }
 
+@app.get("/ui", response_class=HTMLResponse)
+def web_interface():
+    html_path = Path(__file__).parent / "web_interface.html"
+    if html_path.exists():
+        return html_path.read_text()
+    return "<h1>web_interface.html not found</h1>"
+
 
 # -----------------------------------------------------------------------
 # RESET — optionally specify task type via query param
@@ -33,6 +50,7 @@ def reset(task: Optional[str] = Query(None, description="Task type: resume, offe
         state = env.reset_with_task(task)
     else:
         state = env.reset()
+    print(f"DEBUG reset → task_type in state: {state.task_type}") 
     return {"state": state}
 
 
