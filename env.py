@@ -942,7 +942,7 @@ class HireLoopEnv:
 
         # Total
         total = sum(score_parts.values())
-        score_parts["total"] = round(max(-1.0, min(1.0, total)), 4)
+        score_parts["total"] = round(total, 4)
 
         return score_parts
 
