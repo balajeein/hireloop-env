@@ -44,13 +44,12 @@ def web_interface():
 # GET /reset          → random task
 # GET /reset?task=offer  → specific task
 # -----------------------------------------------------------------------
-@app.get("/reset")
+@app.api_route("/reset", methods=["GET", "POST"])
 def reset(task: Optional[str] = Query(None, description="Task type: resume, offer, or communication")):
     if task and task in ("resume", "offer", "communication"):
         state = env.reset_with_task(task)
     else:
         state = env.reset()
-    print(f"DEBUG reset → task_type in state: {state.task_type}") 
     return {"state": state}
 
 
