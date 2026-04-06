@@ -12,6 +12,7 @@ Required environment variables:
 import os
 import json
 import requests
+from typing import List, Optional
 from openai import OpenAI
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
@@ -42,6 +43,39 @@ Rules:
 - Respond with raw JSON only, no explanation
 """
 
+
+# ==============================================================================
+# REQUIRED STDOUT LOGGING FUNCTIONS
+# ==============================================================================
+
+def log_start(task: str, env: str, model: str) -> None:
+    """Emit START line to stdout."""
+    print(f"[START] task={task} env={env} model={model}", flush=True)
+
+
+def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str]) -> None:
+    """Emit STEP line to stdout."""
+    error_val = error if error else "null"
+    done_val = str(done).lower()
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}",
+        flush=True,
+    )
+
+
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
+    """Emit END line to stdout."""
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    success_val = str(success).lower()
+    print(
+        f"[END] success={success_val} steps={steps} score={score:.3f} rewards={rewards_str}",
+        flush=True,
+    )
+
+
+# ==============================================================================
+# AGENT LOGIC
+# ==============================================================================
 
 def get_llm_action(state: dict, task_type: str) -> dict:
     """Ask the LLM what action to take given current state."""
@@ -87,25 +121,25 @@ def get_llm_action(state: dict, task_type: str) -> dict:
         return action
 
     except Exception as e:
-        print(f"  LLM error: {e}")
         return None
 
 
 def run_task(task_type: str) -> dict:
     """Run one full episode for a given task type."""
-    print(f"\n{'='*50}")
-    print(f"Running task: {task_type.upper()}")
-    print(f"{'='*50}")
-
+    
     # Reset environment
     resp = requests.get(f"{ENV_BASE_URL}/reset", params={"task": task_type})
     state = resp.json()["state"]
-    print(f"Candidates: {len(state['candidates'])}")
 
     total_reward = 0.0
     step = 0
     done = False
     max_steps = 20  # safety cap
+    rewards: List[float] = []
+    success = False
+
+    # Emit START
+    log_start(task=task_type, env="hireloop", model=MODEL_NAME)
 
     while not done and step < max_steps:
         step += 1
@@ -114,10 +148,14 @@ def run_task(task_type: str) -> dict:
         action = get_llm_action(state, task_type)
 
         if action is None:
-            print(f"  Step {step}: LLM returned invalid action, skipping")
+            # Log failed step
+            log_step(step=step, action="invalid", reward=0.0, done=False, error="LLM returned invalid action")
             continue
 
-        print(f"  Step {step}: {action.get('type')} → candidate {action.get('candidate_id')}")
+        # Format action string for logging
+        action_type = action.get('type', 'unknown')
+        candidate_id = action.get('candidate_id', 'none')
+        action_str = f"{action_type}('{candidate_id}')"
 
         # Execute action
         try:
@@ -130,39 +168,47 @@ def run_task(task_type: str) -> dict:
             state = result["observation"]
             reward = result["reward"]
             done = result["done"]
+            
+            rewards.append(reward)
             total_reward += reward
-            print(f"           reward={reward:.4f}, done={done}")
+
+            # Log this step
+            log_step(step=step, action=action_str, reward=reward, done=done, error=None)
 
         except Exception as e:
-            print(f"  Step error: {e}")
+            error_msg = str(e)
+            log_step(step=step, action=action_str, reward=0.0, done=False, error=error_msg)
             break
 
     # Get final score
-    resp = requests.get(f"{ENV_BASE_URL}/grader")
-    final_score = resp.json()["score"]
-    print(f"\nFinal score: {final_score:.4f}")
-    print(f"Total reward accumulated: {total_reward:.4f}")
+    try:
+        resp = requests.get(f"{ENV_BASE_URL}/grader")
+        final_score = resp.json()["score"]
+    except Exception:
+        final_score = 0.0
+    
+    # Determine success (threshold: 0.5)
+    success = final_score >= 0.5
+
+    # Emit END
+    log_end(success=success, steps=step, score=final_score, rewards=rewards)
 
     return {
         "task": task_type,
         "final_score": final_score,
         "total_reward": round(total_reward, 4),
-        "steps_taken": step
+        "steps_taken": step,
+        "success": success
     }
 
 
 def main():
-    print("HireLoop — LLM Agent Baseline")
-    print(f"Model: {MODEL_NAME}")
-    print(f"Environment: {ENV_BASE_URL}")
-
     # Check environment is alive
     try:
         resp = requests.get(f"{ENV_BASE_URL}/health")
         assert resp.json()["status"] == "ok"
-        print("Environment: online\n")
     except Exception:
-        print("ERROR: Environment not reachable. Start with: uvicorn api:app --port 7860")
+        print("[ERROR] Environment not reachable. Start with: uvicorn api:app --port 7860", flush=True)
         return
 
     tasks = ["resume", "offer", "communication"]
@@ -172,16 +218,16 @@ def main():
         result = run_task(task)
         results.append(result)
 
-    # Summary
-    print(f"\n{'='*50}")
-    print("BASELINE RESULTS SUMMARY")
-    print(f"{'='*50}")
+    # Print summary (optional, not part of required format but helpful for humans)
+    print("\n" + "="*50, flush=True)
+    print("SUMMARY", flush=True)
+    print("="*50, flush=True)
     for r in results:
-        print(f"  {r['task']:<20} score={r['final_score']:.4f}   steps={r['steps_taken']}")
-
+        print(f"  {r['task']:<15} score={r['final_score']:.3f}   success={r['success']}", flush=True)
+    
     avg_score = sum(r["final_score"] for r in results) / len(results)
-    print(f"\n  Average score: {avg_score:.4f}")
-    print(f"{'='*50}")
+    print(f"\n  Average score: {avg_score:.3f}", flush=True)
+    print("="*50, flush=True)
 
 
 if __name__ == "__main__":
