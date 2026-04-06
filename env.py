@@ -941,6 +941,19 @@ class HireLoopEnv:
         score_parts["encouragement"] = 0.1 if has_encouragement else 0.0
 
         # Total
+        # 12. Optimal length (+0.1 / -0.2 / -0.1)
+        word_count = len(content.split())
+        if 50 <= word_count <= 150:
+            score_parts["optimal_length"] = 0.1
+        elif word_count < 30:
+            score_parts["optimal_length"] = -0.2
+        elif word_count > 250:
+            score_parts["optimal_length"] = -0.1
+        else:
+            score_parts["optimal_length"] = 0.0
+
+        # Total — no clipping here, let full range flow through
+        # _score_communication handles normalization
         total = sum(score_parts.values())
         score_parts["total"] = round(total, 4)
 
