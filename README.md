@@ -10,8 +10,11 @@ pinned: false
 # HireLoop: A Multi-Step Hiring Environment for Reinforcement Learning
 
 **Author:** Balajee (`balajeein`)
-**Live Demo:** https://huggingface.co/spaces/balajeein/hireloop-env
-**API Docs:** https://balajeein-hireloop-env.hf.space/docs
+
+**Live Demo:** https://huggingface.co/spaces/balajeein/hireloop-env  
+
+**API Docs:** https://balajeein-hireloop-env.hf.space/docs  
+
 **GitHub:** https://github.com/balajeein/hireloop-env
 
 ---
