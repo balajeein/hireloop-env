@@ -895,39 +895,93 @@ class HireLoopEnv:
         structured = has_greeting and has_closing and min_length
         score_parts["structured_response"] = 0.2 if structured else 0.0
 
-        # 6. Personalization — candidate name (+0.1)
+        # 6. Personalization — candidate name (+0.1 if correct name, -0.2 if wrong name)
         # Skip for adversarial candidate
-        if candidate and candidate_id != "adv1" and candidate.name.lower() in content_lower:
-            score_parts["personalization"] = 0.1
+        if candidate and candidate_id != "adv1":
+            correct_name = candidate.name.lower()
+            if correct_name in content_lower:
+                score_parts["personalization"] = 0.1
+            else:
+                # Check if a DIFFERENT candidate's name appears instead
+                other_names = [
+                    c.name.lower() for c in self.state.candidates
+                    if c.id != candidate_id and c.id != "adv1"
+                ]
+                wrong_name_used = any(name in content_lower for name in other_names)
+                score_parts["personalization"] = -0.2 if wrong_name_used else 0.0
         else:
             score_parts["personalization"] = 0.0
 
-        # 7. Job role context (+0.15)
-        # Email should mention the actual job role they applied for
+        # 7. Job role context (+0.15 correct role, -0.15 if a completely wrong role is named)
         if candidate_id != "adv1":
             role_words = [w for w in job_role.split() if len(w) > 3]
             role_mentioned = sum(1 for w in role_words if w in content_lower) >= 1
-            score_parts["job_role_context"] = 0.15 if role_mentioned else 0.0
+
+            # Common role keywords that would indicate a hallucinated wrong role
+            # Build from scenario roles — any role word NOT in the current job role
+            all_role_words = [
+                "engineer", "developer", "analyst", "designer", "manager",
+                "backend", "frontend", "android", "ios", "devops", "data",
+                "machine learning", "ml engineer", "python", "java", "cloud"
+            ]
+            wrong_role_words = [w for w in all_role_words if w not in job_role and w in content_lower]
+            wrong_role_mentioned = len(wrong_role_words) > 0
+
+            if role_mentioned:
+                score_parts["job_role_context"] = 0.15
+            elif wrong_role_mentioned:
+                score_parts["job_role_context"] = -0.15
+            else:
+                score_parts["job_role_context"] = 0.0
         else:
             score_parts["job_role_context"] = 0.0
 
-        # 8. Missing skill reference (+0.2)
-        # Email should mention at least one skill the candidate was missing
+        # 8. Missing skill reference (+0.2 correct, -0.2 if wrong candidate's skills mentioned)
         if candidate and candidate_id != "adv1":
             candidate_skills = set(s.lower() for s in candidate.skills)
             missing_skills = job_skills - candidate_skills
-            missing_mentioned = any(skill in content_lower for skill in missing_skills)
-            score_parts["missing_skill_reference"] = 0.2 if missing_mentioned else 0.0
+
+            # Collect ALL skills from other candidates (skills that don't belong here)
+            other_candidate_skills = set(
+                s.lower()
+                for c in self.state.candidates
+                if c.id != candidate_id
+                for s in c.skills
+            ) - candidate_skills - job_skills  # exclude overlap with this candidate or job
+
+            correct_missing_mentioned = any(skill in content_lower for skill in missing_skills)
+            wrong_skills_mentioned = any(skill in content_lower for skill in other_candidate_skills)
+
+            if correct_missing_mentioned:
+                score_parts["missing_skill_reference"] = 0.2
+            elif wrong_skills_mentioned:
+                score_parts["missing_skill_reference"] = -0.2  # hallucinated another candidate's skills
+            else:
+                score_parts["missing_skill_reference"] = 0.0
         else:
             score_parts["missing_skill_reference"] = 0.0
 
-        # 9. Existing skill acknowledgment (+0.15)
-        # Email should mention at least one skill the candidate actually has
-        # This shows the agent read the profile, not just copied a template
+        # 9. Existing skill acknowledgment (+0.15 correct, -0.15 if wrong skills cited)
         if candidate and candidate_id != "adv1":
             candidate_skills = set(s.lower() for s in candidate.skills)
-            existing_mentioned = any(skill in content_lower for skill in candidate_skills)
-            score_parts["existing_skill_acknowledgment"] = 0.15 if existing_mentioned else 0.0
+
+            # Skills belonging to other candidates but NOT this one
+            other_candidate_skills = set(
+                s.lower()
+                for c in self.state.candidates
+                if c.id != candidate_id
+                for s in c.skills
+            ) - candidate_skills
+
+            correct_existing_mentioned = any(skill in content_lower for skill in candidate_skills)
+            wrong_existing_mentioned = any(skill in content_lower for skill in other_candidate_skills)
+
+            if correct_existing_mentioned:
+                score_parts["existing_skill_acknowledgment"] = 0.15
+            elif wrong_existing_mentioned:
+                score_parts["existing_skill_acknowledgment"] = -0.15  # mentioned skills this person doesn't have
+            else:
+                score_parts["existing_skill_acknowledgment"] = 0.0
         else:
             score_parts["existing_skill_acknowledgment"] = 0.0
 
