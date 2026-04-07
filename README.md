@@ -39,6 +39,14 @@ No existing OpenEnv environment covers this domain. HireLoop fills that gap with
 
 ---
 
+## 🏗️ System Architecture
+
+<p align="center">
+  <a href="./assets/Untitled-2026-04-07-1000.svg">
+    <img src="./assets/Untitled-2026-04-07-1000.svg" alt="HireLoop Environment Architecture" style="max-width: 100%; height: auto;">
+  </a>
+</p>
+
 ## Try It Now (No Setup Required)
 
 The environment is live on Hugging Face Spaces. Hit any endpoint directly:
