@@ -292,7 +292,7 @@ Every `/step` response returns a full observation:
   "job_description": {
     "role": "Python ML Engineer",
     "required_skills": ["python", "ml"],
-    "max_salary": 10,
+    "max_salary": 100000,
     "seniority": "mid"
   },
   "candidates": [
@@ -301,7 +301,7 @@ Every `/step` response returns a full observation:
       "name": "Alice",
       "skills": ["python", "ml"],
       "years_experience": 3,
-      "expected_salary": 9,
+      "expected_salary": 90000,
       "gender": "female",
       "nationality": "indian"
     }
@@ -310,9 +310,9 @@ Every `/step` response returns a full observation:
   "rejected": [],
   "step_count": 1,
   "task_type": "offer",
-  "budget": 22,
+  "budget": 220000,
   "offers_made": [
-    {"candidate_id": "1", "actual_salary": 9, "negotiated": false}
+    {"candidate_id": "1", "actual_salary": 90000, "negotiated": false}
   ],
   "emails_sent": [],
   "counterfactual": null,
@@ -350,14 +350,16 @@ reward = round(reward, 4)
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Server status check |
-| `/reset` | GET | Reset environment (random task) |
-| `/reset?task=resume` | GET | Reset with specific task |
+| `/reset` | POST | Create new session, reset environment (returns `session_id`) |
+| `/reset?task=resume` | POST | Create new session with specific task |
+| `/reset` | GET | Legacy reset (backward compatible, no session) |
 | `/step` | POST | Execute action, get observation + reward |
 | `/state` | GET | Get current state without acting |
 | `/grader` | GET | Get final score for current episode |
 | `/baseline` | GET | Run heuristic baseline across all 3 tasks |
 | `/eval` | GET | Full evaluation with bias reports |
 | `/tasks` | GET | Task descriptions and action schemas |
+| `/ui` | GET | Interactive debug web UI |
 
 ---
 
@@ -380,6 +382,33 @@ curl https://balajeein-hireloop-env.hf.space/baseline
 - Score >= 0.75 → High quality
 - Score >= 0.45 → Medium quality
 - Score < 0.45 → Low quality
+
+---
+
+## Reproducibility
+
+The inference script supports multiple runs per task for statistical rigor:
+
+```bash
+python3 inference.py --runs 3
+```
+
+Output includes mean, standard deviation, and best score per task:
+
+```
+| Task            |     Mean |   Std (±) |     Best |
+|-----------------|----------|-----------|----------|
+| resume          |   0.8421 |   0.0312  |   0.8800 |
+| offer           |   0.5133 |   0.0421  |   0.5600 |
+| communication   |   0.4012 |   0.0289  |   0.4300 |
+| Overall Mean    |   0.5855 |           |          |
+```
+
+Run the automated validation script to verify all endpoints:
+
+```bash
+./validate.sh http://localhost:7860
+```
 
 ---
 
@@ -492,19 +521,27 @@ Expected output:
 ## Project Structure
 ```
 hireloop-env/
-├── api.py              # FastAPI server — all endpoints
-├── env.py              # Core environment logic — step/reset/reward
-├── models.py           # Pydantic models — Candidate, JobDescription, HireLoopState, Action, Reward
-├── inference.py        # LLM agent baseline script
-├── scenarios.json      # 13 hiring scenarios across different roles
-├── openenv.yaml        # OpenEnv spec metadata
-├── pyproject.toml      # OpenEnv package configuration
-├── uv.lock             # Dependency lock file
-├── Dockerfile          # Container configuration
-├── requirements.txt    # Python dependencies
-├── web_interface.html  # Debug UI
+├── hireloop/
+│   ├── __init__.py         # Package init — exports HireLoopEnv, session helpers
+│   ├── env.py              # Thin orchestrator (~200 lines) — delegates to task modules
+│   ├── session.py          # UUID-based session store for concurrent access
+│   └── tasks/
+│       ├── __init__.py
+│       ├── resume.py       # Resume screening — reset, step, score, bias audit
+│       ├── offer.py        # Offer decision — SKILL_CATEGORIES, negotiation, step, score
+│       └── communication.py # Communication — UNSAFE_WORDS, email scoring, adversarial detection
+├── api.py                  # FastAPI server — session-based endpoints
+├── models.py               # Pydantic models — Candidate, JobDescription, HireLoopState, Action, StepRequest
+├── inference.py            # LLM agent baseline with variance metrics
+├── scenarios.json          # 13 hiring scenarios with realistic USD salaries
+├── validate.sh             # Automated validation script (13 checks)
+├── openenv.yaml            # OpenEnv spec metadata with session docs
+├── pyproject.toml          # OpenEnv package configuration
+├── Dockerfile              # Container configuration
+├── requirements.txt        # Python dependencies
+├── web_interface.html      # Debug UI
 └── server/
-    └── app.py          # Server entry point for OpenEnv deployment
+    └── app.py              # Server entry point for OpenEnv deployment
 ```
 
 ---
@@ -532,9 +569,9 @@ The environment includes 13 scenarios covering diverse real-world roles:
 
 ## Known Limitations
 
-**Single-user design:** The environment uses a global singleton `env = HireLoopEnv()`. Concurrent requests from multiple users will interfere. This is intentional for hackathon evaluation — the environment is designed to be run sequentially by one agent at a time.
+**In-memory sessions:** Session state is stored in-memory via UUID-keyed instances. Restarting the server clears all sessions. For production use, a persistent store (Redis, database) would be needed.
 
-**Budget scale:** Salaries are in abstract units (4–10) rather than real dollar amounts. This keeps the environment simple while preserving the budget trade-off dynamics.
+**Deterministic RNG:** The environment uses a seeded RNG (`seed=42`). While this ensures reproducibility, it means the same sequence of resets will produce the same scenarios. Use the `--runs` flag in `inference.py` to measure variance across multiple episodes.
 
 ---
 

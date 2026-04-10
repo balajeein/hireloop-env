@@ -62,10 +62,20 @@ reward:
   shaped: true
 
 endpoints:
-  reset: "GET /reset"
+  reset: "POST /reset"
   step: "POST /step"
   state: "GET /state"
+  grader: "GET /grader"
   health: "GET /health"
+  baseline: "GET /baseline"
+  eval: "GET /eval"
+  tasks: "GET /tasks"
+  ui: "GET /ui"
+
+session:
+  type: uuid
+  header: session_id
+  description: "Each /reset call returns a session_id. Pass it in all subsequent /step, /state, /grader calls."
 
 docker:
   port: 7860

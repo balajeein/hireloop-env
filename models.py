@@ -7,7 +7,7 @@ class Candidate(BaseModel):
     name: str
     skills: List[str]
     years_experience: int
-    expected_salary: int
+    expected_salary: int  # Salary in USD (e.g., 70000 = $70,000/year)
     gender: Optional[str] = None
     nationality: Optional[str] = None
 
@@ -15,7 +15,7 @@ class Candidate(BaseModel):
 class JobDescription(BaseModel):
     role: str
     required_skills: List[str]
-    max_salary: int
+    max_salary: int  # Maximum salary in USD
     seniority: str  # "junior" / "mid" / "senior"
 
 
@@ -35,6 +35,12 @@ class Action(BaseModel):
     type: str  # "accept" | "reject" | "offer" | "negotiate" | "write_email"
     candidate_id: str
     content: Optional[str] = None  # only required for write_email
+
+
+class StepRequest(BaseModel):
+    """Request body for POST /step with session isolation."""
+    session_id: str
+    action: Action
 
 
 class Reward(BaseModel):

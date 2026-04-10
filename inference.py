@@ -3,6 +3,10 @@ HireLoop Inference Script
 =========================
 Runs a baseline LLM agent against all 3 tasks and reports scores.
 
+Supports multiple runs per task for variance metrics:
+    python3 inference.py --runs 3
+    python3 inference.py --runs 5 --task resume
+
 Required environment variables:
     API_BASE_URL   The API endpoint for the LLM
     MODEL_NAME     The model identifier
@@ -11,6 +15,7 @@ Required environment variables:
 
 import os
 import json
+import argparse
 import requests
 from typing import List, Optional
 from openai import OpenAI
@@ -203,6 +208,15 @@ def run_task(task_type: str) -> dict:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="HireLoop LLM Inference Agent")
+    parser.add_argument("--runs", type=int, default=3,
+                        help="Number of runs per task for variance metrics (default: 3)")
+    parser.add_argument("--task", type=str, default=None,
+                        help="Run only one task type (resume, offer, or communication)")
+    args = parser.parse_args()
+
+    N_RUNS = args.runs
+
     # Check environment is alive
     try:
         resp = requests.get(f"{ENV_BASE_URL}/health")
@@ -211,23 +225,57 @@ def main():
         print("[ERROR] Environment not reachable. Start with: uvicorn api:app --port 7860", flush=True)
         return
 
-    tasks = ["resume", "offer", "communication"]
-    results = []
+    if args.task:
+        tasks = [args.task]
+    else:
+        tasks = ["resume", "offer", "communication"]
+
+    # Collect results: {task: [scores]}
+    task_stats = {}
 
     for task in tasks:
-        result = run_task(task)
-        results.append(result)
+        run_scores = []
+        print(f"\n{'='*50}", flush=True)
+        print(f"Running task: {task.upper()} ({N_RUNS} run{'s' if N_RUNS > 1 else ''})", flush=True)
+        print(f"{'='*50}", flush=True)
 
-    # Print summary (optional, not part of required format but helpful for humans)
-    print("\n" + "="*50, flush=True)
-    print("SUMMARY", flush=True)
-    print("="*50, flush=True)
-    for r in results:
-        print(f"  {r['task']:<15} score={r['final_score']:.3f}   success={r['success']}", flush=True)
-    
-    avg_score = sum(r["final_score"] for r in results) / len(results)
-    print(f"\n  Average score: {avg_score:.3f}", flush=True)
-    print("="*50, flush=True)
+        for run_idx in range(N_RUNS):
+            if N_RUNS > 1:
+                print(f"\n--- Run {run_idx + 1}/{N_RUNS} ---", flush=True)
+            result = run_task(task)
+            run_scores.append(result["final_score"])
+
+        mean = sum(run_scores) / len(run_scores)
+        std = (sum((s - mean) ** 2 for s in run_scores) / len(run_scores)) ** 0.5
+        best = max(run_scores)
+
+        task_stats[task] = {
+            "scores": run_scores,
+            "mean": mean,
+            "std": std,
+            "best": best,
+        }
+
+    # Print summary table
+    print("\n", flush=True)
+    print("=" * 60, flush=True)
+    print("BASELINE RESULTS SUMMARY", flush=True)
+    print("=" * 60, flush=True)
+    print(f"| {'Task':<15} | {'Mean':>8} | {'Std (±)':>9} | {'Best':>8} |", flush=True)
+    print(f"|{'-'*17}|{'-'*10}|{'-'*11}|{'-'*10}|", flush=True)
+
+    all_means = []
+    for task in tasks:
+        s = task_stats[task]
+        all_means.append(s["mean"])
+        print(
+            f"| {task:<15} | {s['mean']:>8.4f} | {s['std']:>8.4f}  | {s['best']:>8.4f} |",
+            flush=True,
+        )
+
+    overall_mean = sum(all_means) / len(all_means) if all_means else 0.0
+    print(f"| {'Overall Mean':<15} | {overall_mean:>8.4f} |{'':>11}|{'':>10}|", flush=True)
+    print("=" * 60, flush=True)
 
 
 if __name__ == "__main__":
