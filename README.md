@@ -9,7 +9,7 @@ pinned: false
 
 # HireLoop: Multi-Step Hiring Pipeline RL Environment
 
-[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-blue)]() [![Validation](https://img.shields.io/badge/Validation-27_of_27_Passed-brightgreen)]() [![Sessions](https://img.shields.io/badge/Sessions-UUID_Isolated-orange)]() [![Python](https://img.shields.io/badge/Python-3.11-blue)]()
+[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-blue)]() [![Validation](https://img.shields.io/badge/Validation-26_of_26_Passed-brightgreen)]() [![Sessions](https://img.shields.io/badge/Sessions-UUID_Isolated-orange)]() [![Python](https://img.shields.io/badge/Python-3.11-blue)]()
 
 **Author:** Balajee (`balajeein`)
 **Live Demo:** https://huggingface.co/spaces/balajeein/hireloop-env
@@ -39,7 +39,7 @@ HireLoop is a multi-task reinforcement learning environment that simulates a pro
 - Adversarial robustness catches agents that fall for prompt injections.
 - Dynamic budget constraints ensure every scenario is solvable but tight.
 - Skill categories enable nuanced salary negotiation logic.
-- Automated validation passes 27/27 strict OpenEnv checks.
+- Automated validation passes 26/26 strict OpenEnv checks.
 - Baseline scripts report exact mean, standard deviation, and best scores.
 
 ---
@@ -268,24 +268,26 @@ Model: `meta-llama/Llama-3.3-70B-Instruct` (3 runs per task)
 hireloop-env/
 ├── examples/
 │   └── quickstart.py             # Basic usage examples
-├── hireloop/
-│   ├── env.py                    # Main OpenEnv orchestrator
-│   ├── session.py                # UUID session manager
-│   ├── tasks/
-│   │   ├── resume.py             # Resume screening logic
-│   │   ├── offer.py              # Offer and budget rules
-│   │   └── communication.py      # Rejection email logic
-│   └── utils/
-│       ├── skills.py             # Skill category definitions
-│       └── email_scorer.py       # Email scoring and safety checks
-├── client.py                     # Python API client
-├── api.py                        # FastAPI routes
-├── models.py                     # Pydantic schema models
-├── inference.py                  # Baseline testing script
-├── scenarios.json                # Environment scenarios
-├── validate.sh                   # Environment test suite
-├── openenv.yaml                  # OpenEnv configuration metadata
-├── Dockerfile                    # Docker build file
+├── server/
+│   ├── app.py                    # OpenEnv create_fastapi_app entry point
+│   ├── env.py                    # HireLoopEnv — inherits Environment ABC
+│   └── Dockerfile                # Server container definition
+├── tasks/
+│   ├── resume.py                 # Resume screening — reset, step, score, bias audit
+│   ├── offer.py                  # Offer decision — negotiation, budget rules
+│   └── communication.py          # Rejection emails — scoring, adversarial detection
+├── utils/
+│   ├── skills.py                 # SKILL_CATEGORIES, negotiation eligibility
+│   └── email_scorer.py           # UNSAFE_WORDS, email scoring
+├── client.py                     # Typed Python API client
+├── api.py                        # FastAPI routes — all endpoints
+├── models.py                     # HireLoopAction, HireLoopObservation, HireLoopState
+├── session.py                    # UUID session store with TTL cleanup
+├── inference.py                  # LLM baseline with --runs N variance metrics
+├── scenarios.json                # 13 hiring scenarios (USD salaries)
+├── validate.sh                   # 26-check automated validation script
+├── openenv.yaml                  # OpenEnv spec (spec_version: 1)
+├── Dockerfile                    # Root Docker build file
 └── requirements.txt              # Python dependencies
 ```
 
@@ -338,7 +340,7 @@ openenv validate
 Expected output:
 ```
 ==============================================
-  Results: 27 passed, 0 failed
+  Results: 26 passed, 0 failed
 ==============================================
 ```
 
