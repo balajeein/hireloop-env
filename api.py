@@ -135,6 +135,11 @@ def step(body: dict):
         "done": obs.done,
         "info": obs.metadata,
     }
+
+    # Auto-cleanup session when episode is complete
+    if obs.done and session_id:
+        delete_session(session_id)
+
     return resp
 
 
