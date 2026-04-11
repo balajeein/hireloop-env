@@ -9,11 +9,13 @@ pinned: false
 
 # HireLoop: Multi-Step Hiring Pipeline RL Environment
 
-[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-blue)]() [![Validation](https://img.shields.io/badge/Validation-26_of_26_Passed-brightgreen)]() [![Sessions](https://img.shields.io/badge/Sessions-UUID_Isolated-orange)]() [![Python](https://img.shields.io/badge/Python-3.11-blue)]()
+[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-blue)]()[![Validation](https://img.shields.io/badge/Validation-26_of_26_Passed-brightgreen)]() [![Sessions](https://img.shields.io/badge/Sessions-UUID_Isolated-orange)]() [![Python](https://img.shields.io/badge/Python-3.11-blue)]()
 
-**Author:** Balajee (`balajeein`)
+
 **Live Demo:** https://huggingface.co/spaces/balajeein/hireloop-env
+
 **API Docs:** https://balajeein-hireloop-env.hf.space/docs
+
 **GitHub:** https://github.com/balajeein/hireloop-env
 
 ---
