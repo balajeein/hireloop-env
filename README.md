@@ -68,7 +68,7 @@ https://balajeein-hireloop-env.hf.space/docs
 ## Environment Tasks
 
 ### Task 1: Resume Screening (Easy)
-**Objective:** Shortlist candidates balancing precise skill compatibility against demographic diversity goals. Systemic bias audits actively punish demographic over-concentration. Continuous repetition or excessive deliberation incurs penalties.
+**Objective:** Select top candidates based on skill match and experience. A bias audit penalizes shortlists that are mono-gender or mono-nationality when diverse candidates exist. Repeated actions and excessive steps incur penalties.
 
 **Action Space:**
 POST /step
@@ -316,9 +316,11 @@ hireloop-env/
 ## Local Setup
 ```bash
 git clone https://github.com/balajeein/hireloop-env.git
-python3 -m venv venv && source venv/bin/activate
+cd hireloop-env
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-uvicorn api:app --reload --port 7860
+uvicorn api:app --port 7860
 ```
 
 ---
