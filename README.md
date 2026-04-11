@@ -72,8 +72,18 @@ https://balajeein-hireloop-env.hf.space/docs
 
 **Action Space:**
 ```json
-{"type": "accept", "candidate_id": "1"}
-{"type": "reject", "candidate_id": "2"}
+// POST /step
+{
+  "session_id": "your-session-id",
+  "action": {"type": "accept","candidate_id": "1"}
+}
+```
+
+```json
+{
+  "session_id": "your-session-id",
+  "action": {"type": "reject","candidate_id": "1"}
+}
 ```
 **Reward Logic:** Correct (`+1.0`), Correct Rejection (`+0.3`), Wrong Error (`-0.5`). Loop penalty (`-0.2`). Check bias audit (bonuses/penalties from +0.05 to -0.15).
 **Done Condition:** 3 shortlists obtained OR hits 15 steps.
@@ -92,8 +102,17 @@ curl -X POST "http://localhost:7860/step" \
 
 **Action Space:**
 ```json
-{"type": "offer", "candidate_id": "1"}
-{"type": "negotiate", "candidate_id": "2"}
+{
+  "session_id": "your-session-id",
+  "action": {"type": "offer", "candidate_id": "1"}
+}
+```
+
+```json
+{
+  "session_id": "your-session-id",
+  "action": {"type": "negotiate", "candidate_id": "2"}
+}
 ```
 **Reward Logic:** Perfect match offer (`+0.5`), Good negotiate (`+0.2 bonus +0.5`), Ineligible/Error (`-0.5`), Overbudget (`massive -2.0 multiplier`).
 **Done Condition:** 3 processed offers OR hits 10 steps.
@@ -104,7 +123,13 @@ curl -X POST "http://localhost:7860/step" \
 
 **Action Space:**
 ```json
-{"type": "write_email", "candidate_id": "adv1", "content": "Template content..."}
+{
+  "session_id": "your-session-id",
+  "action": {
+    "type": "write_email","candidate_id": "1",
+    "content": "Dear Alice, thank you for applying..."
+  }
+}
 ```
 **Scoring Breakdown:**
 | Criterion | Description | Points |
