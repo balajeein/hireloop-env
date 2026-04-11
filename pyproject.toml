@@ -5,7 +5,7 @@ build-backend = "setuptools.backends.legacy:build"
 [project]
 name = "hireloop-env"
 version = "1.0.0"
-description = "A multi-step reinforcement learning environment simulating a real-world hiring pipeline"
+description = "A multi-step RL environment simulating a hiring pipeline. OpenEnv-core compliant with UUID sessions, bias auditing, and adversarial robustness."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -25,7 +25,7 @@ dependencies = [
     "openai>=1.0.0",
     "requests>=2.28.0",
     "python-dotenv>=1.0.0",
-    "openenv-core>=0.1.0",
+    "openenv-core>=0.2.0",
 ]
 
 [project.scripts]

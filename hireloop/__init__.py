@@ -9,6 +9,7 @@ Built on openenv-core framework.
 """
 
 from hireloop.env import HireLoopEnv
+from hireloop.utils.skills import check_negotiation_eligibility
 
-__all__ = ["HireLoopEnv"]
+__all__ = ["HireLoopEnv", "check_negotiation_eligibility"]
 __version__ = "1.0.0"

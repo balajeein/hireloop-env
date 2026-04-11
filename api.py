@@ -15,7 +15,7 @@ from hireloop.env import HireLoopEnv
 from hireloop.session import (
     create_session, get_session, delete_session, get_or_create_legacy_session
 )
-from hireloop.tasks.offer import check_negotiation_eligibility
+from hireloop.utils.skills import check_negotiation_eligibility
 
 app = FastAPI(
     title="HireLoop Environment",

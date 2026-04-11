@@ -45,7 +45,7 @@ except (ImportError, TypeError):
 
 
 from hireloop.tasks import resume, offer, communication
-from hireloop.tasks.offer import check_negotiation_eligibility
+from hireloop.utils.skills import check_negotiation_eligibility
 
 
 class HireLoopEnv(Environment):

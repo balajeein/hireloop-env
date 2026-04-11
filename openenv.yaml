@@ -9,6 +9,7 @@ description: >
 author: "balajeein"
 license: "MIT"
 framework: "openenv-core"
+concurrent_sessions: true
 
 tasks:
   - name: resume_screening
@@ -68,10 +69,19 @@ reward:
   type: float
   shaped: true
 
+llm_baseline:
+  model: "meta-llama/Llama-3.3-70B-Instruct"
+  runs_per_task: 3
+  results:
+    resume: {mean: 0.7639, std: 0.1117, best: 0.8717}
+    offer: {mean: 0.8226, std: 0.0744, best: 0.9279}
+    communication: {mean: 0.3084, std: 0.2350, best: 0.5698}
+    overall_mean: 0.6316
+
 session:
   type: uuid
   supports_concurrent: true
-  description: "POST /reset returns session_id. Pass in all subsequent /step, /state, /grader calls."
+  description: "POST /reset returns session_id. Pass in all subsequent calls."
 
 endpoints:
   reset: "POST /reset"
@@ -86,7 +96,4 @@ endpoints:
 
 docker:
   port: 7860
-  base_image: "python:3.11"
-
-concurrent_sessions: true
-supports_websocket: false
+  base_image: "python:3.11-slim"
