@@ -11,11 +11,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from typing import Optional
 from models import HireLoopAction, HireLoopObservation
-from hireloop.env import HireLoopEnv
-from hireloop.session import (
+from server.env import HireLoopEnv
+from session import (
     create_session, get_session, delete_session, get_or_create_legacy_session
 )
-from hireloop.utils.skills import check_negotiation_eligibility
+from utils.skills import check_negotiation_eligibility
 
 app = FastAPI(
     title="HireLoop Environment",
@@ -31,9 +31,7 @@ app.add_middleware(
 )
 
 
-# -----------------------------------------------------------------------
-# Helpers
-# -----------------------------------------------------------------------
+
 
 def _obs_to_response(obs: HireLoopObservation) -> dict:
     obs_dict = obs.model_dump()
@@ -49,9 +47,7 @@ def _obs_to_response(obs: HireLoopObservation) -> dict:
     }
 
 
-# -----------------------------------------------------------------------
-# Root + Health + UI
-# -----------------------------------------------------------------------
+
 
 @app.get("/")
 def home():
@@ -76,9 +72,7 @@ def web_interface():
     return "<h1>web_interface.html not found</h1>"
 
 
-# -----------------------------------------------------------------------
-# RESET — POST creates a new session; GET is legacy backward compat
-# -----------------------------------------------------------------------
+
 
 @app.post("/reset")
 def reset_post(task: Optional[str] = Query(None, description="Task type: resume, offer, or communication")):
@@ -101,9 +95,7 @@ def reset_get(task: Optional[str] = Query(None, description="Task type: resume, 
     return {"state": env.state_view()}
 
 
-# -----------------------------------------------------------------------
-# STEP — accepts action + optional session_id
-# -----------------------------------------------------------------------
+
 
 @app.post("/step")
 def step(body: dict):
@@ -143,9 +135,7 @@ def step(body: dict):
     return resp
 
 
-# -----------------------------------------------------------------------
-# STATE — supports session_id query param
-# -----------------------------------------------------------------------
+
 
 @app.get("/state")
 def state(session_id: Optional[str] = Query(None)):
@@ -158,9 +148,7 @@ def state(session_id: Optional[str] = Query(None)):
     return {"state": env.state_view()}
 
 
-# -----------------------------------------------------------------------
-# GRADER — supports session_id query param
-# -----------------------------------------------------------------------
+
 
 @app.get("/grader")
 def grader(session_id: Optional[str] = Query(None)):
@@ -178,9 +166,7 @@ def grader(session_id: Optional[str] = Query(None)):
     }
 
 
-# -----------------------------------------------------------------------
-# Shared heuristic logic — used by /baseline and /eval to avoid duplication
-# -----------------------------------------------------------------------
+
 def _run_heuristic_task(env: HireLoopEnv, task_type: str) -> dict:
     """
     Run a heuristic agent on one task and return results.
@@ -272,9 +258,7 @@ def _run_heuristic_task(env: HireLoopEnv, task_type: str) -> dict:
     }
 
 
-# -----------------------------------------------------------------------
-# BASELINE — runs a simple heuristic per task (uses internal session)
-# -----------------------------------------------------------------------
+
 
 @app.get("/baseline")
 def baseline():
@@ -298,9 +282,7 @@ def baseline():
     }
 
 
-# -----------------------------------------------------------------------
-# TASKS — all 3 tasks with action schemas
-# -----------------------------------------------------------------------
+
 
 @app.get("/tasks")
 def tasks():
@@ -377,9 +359,7 @@ def tasks():
     }
 
 
-# -----------------------------------------------------------------------
-# EVAL — runs all 3 tasks with baseline heuristic, returns full report
-# -----------------------------------------------------------------------
+
 
 @app.get("/eval")
 def eval_all():

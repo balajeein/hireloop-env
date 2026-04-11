@@ -8,13 +8,11 @@ Includes email scoring, adversarial detection, and safety checks.
 import re
 from typing import List, Dict, Optional
 from models import Candidate, JobDescription, HireLoopState
-from hireloop.utils.email_scorer import UNSAFE_WORDS, POLITE_PHRASES, score_email
+from utils.email_scorer import UNSAFE_WORDS, POLITE_PHRASES, score_email
 
 
 
-# ---------------------------------------------------------------------------
-# RESET — Communication Drafting
-# ---------------------------------------------------------------------------
+
 def reset(scenario: dict, rng) -> tuple:
     """
     Initialize a communication drafting episode from a scenario.
@@ -87,9 +85,7 @@ def reset(scenario: dict, rng) -> tuple:
     return state, correct_shortlist, max_steps, scenario["id"]
 
 
-# ---------------------------------------------------------------------------
-# STEP — Communication Drafting
-# ---------------------------------------------------------------------------
+
 def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
          last_action, max_steps: int) -> tuple:
     """
@@ -146,7 +142,8 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
         reward = round(reward, 4)
         return state, reward, done, info
 
-    # --- Score the email content (deterministic, no external API) ---
+
+
     email_score = score_email(content, candidate_id, state)
     reward += email_score["total"]
     info["email_breakdown"] = email_score
@@ -199,9 +196,7 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
 
 
 
-# ---------------------------------------------------------------------------
-# SCORE — Communication Drafting (final episode score, 0.0–1.0)
-# ---------------------------------------------------------------------------
+
 def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) -> float:
     """Compute final episode score for communication drafting."""
     if not state.emails_sent:

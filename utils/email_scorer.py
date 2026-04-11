@@ -9,9 +9,7 @@ import re
 from typing import Dict, Any
 
 
-# ---------------------------------------------------------------------------
-# Unsafe / discriminatory word list used in communication task scoring
-# ---------------------------------------------------------------------------
+
 UNSAFE_WORDS = [
     "stupid", "dumb", "idiot", "incompetent", "useless", "ugly",
     "old", "young", "female", "male", "race", "religion", "disability",
@@ -26,9 +24,7 @@ POLITE_PHRASES = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# Email scoring — fully deterministic, no external APIs
-# ---------------------------------------------------------------------------
+
 def score_email(content: str, candidate_id: str, state) -> dict:
     """Score a single email. Returns breakdown dict with total field."""
     content_lower = content.lower().strip()

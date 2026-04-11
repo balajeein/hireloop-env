@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
 
-# ── OpenEnv-core base class shim ──────────────────────────────────
+
+
 # When openenv-core is available (Python 3.10+), we note it.
 # But our Action/Observation are pure Pydantic — no dataclass inheritance.
 try:
@@ -27,7 +28,8 @@ except (ImportError, TypeError):
             self.step_count = step_count
 
 
-# ── Domain models (preserved exactly) ─────────────────────────────
+
+
 
 class Candidate(BaseModel):
     id: str
@@ -46,7 +48,8 @@ class JobDescription(BaseModel):
     seniority: str  # "junior" / "mid" / "senior"
 
 
-# ── OpenEnv-compliant Action ──────────────────────────────────────
+
+
 
 class HireLoopAction(BaseModel):
     type: str = ""
@@ -55,7 +58,8 @@ class HireLoopAction(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
-# ── OpenEnv-compliant Observation ─────────────────────────────────
+
+
 
 class HireLoopObservation(BaseModel):
     done: bool = False
@@ -74,7 +78,8 @@ class HireLoopObservation(BaseModel):
     negotiation_hints: Optional[Dict] = None
 
 
-# ── Internal state model (used inside hireloop/env.py) ─────────────
+
+
 # This is a Pydantic model for internal env logic — NOT returned to API
 
 class HireLoopState(BaseModel):
@@ -90,7 +95,8 @@ class HireLoopState(BaseModel):
     counterfactual: Optional[Dict] = None
 
 
-# ── Session request model (kept for api.py backward compat) ───────
+
+
 
 class StepRequest(BaseModel):
     """Request body for POST /step with session isolation."""

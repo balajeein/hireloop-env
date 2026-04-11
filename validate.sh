@@ -38,27 +38,21 @@ echo "  Target: $ENV_URL"
 echo "=============================================="
 echo ""
 
-# -----------------------------------------------------------------------
-# 1. Health check
-# -----------------------------------------------------------------------
+
 echo "1. Health check"
 HEALTH=$(curl -s "$ENV_URL/health")
 check "Server is reachable" "[ ! -z '$HEALTH' ]"
 STATUS=$(echo "$HEALTH" | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])" 2>/dev/null || echo "")
 check "Status is 'ok'" "[ '$STATUS' = 'ok' ]"
 
-# -----------------------------------------------------------------------
-# 2. GET /tasks — verify 3 tasks returned
-# -----------------------------------------------------------------------
+
 echo ""
 echo "2. GET /tasks"
 TASKS=$(curl -s "$ENV_URL/tasks")
 TASK_COUNT=$(echo "$TASKS" | python3 -c "import sys,json; print(len(json.load(sys.stdin)['tasks']))" 2>/dev/null || echo "0")
 check "3 tasks returned" "[ '$TASK_COUNT' = '3' ]"
 
-# -----------------------------------------------------------------------
-# 3. POST /reset — verify session_id returned
-# -----------------------------------------------------------------------
+
 echo ""
 echo "3. POST /reset"
 RESET_RESP=$(curl -s -X POST "$ENV_URL/reset")
@@ -74,9 +68,7 @@ check "observation has candidates" "[ '$HAS_CANDIDATES' = 'True' ]"
 HAS_TASK_TYPE=$(echo "$RESET_RESP" | python3 -c "import sys,json; print('task_type' in json.load(sys.stdin).get('observation',{}))" 2>/dev/null || echo "")
 check "observation has task_type" "[ '$HAS_TASK_TYPE' = 'True' ]"
 
-# -----------------------------------------------------------------------
-# 4. POST /step with accept action — verify response structure
-# -----------------------------------------------------------------------
+
 echo ""
 echo "4. POST /step"
 TASK_TYPE=$(echo "$RESET_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('task_type',''))" 2>/dev/null || echo "")
@@ -101,27 +93,21 @@ check "done is boolean" "[ '$DONE_TYPE' = 'bool' ]"
 HAS_OBS=$(echo "$STEP_RESP" | python3 -c "import sys,json; print('observation' in json.load(sys.stdin))" 2>/dev/null || echo "")
 check "observation returned" "[ '$HAS_OBS' = 'True' ]"
 
-# -----------------------------------------------------------------------
-# 5. GET /grader — verify score in [0, 1]
-# -----------------------------------------------------------------------
+
 echo ""
 echo "5. GET /grader"
 GRADER_RESP=$(curl -s "$ENV_URL/grader")
 SCORE_OK=$(echo "$GRADER_RESP" | python3 -c "import sys,json; s=json.load(sys.stdin)['score']; print('ok' if 0<=s<=1 else 'bad')" 2>/dev/null || echo "bad")
 check "score in [0, 1]" "[ '$SCORE_OK' = 'ok' ]"
 
-# -----------------------------------------------------------------------
-# 6. POST /reset?task=resume
-# -----------------------------------------------------------------------
+
 echo ""
 echo "6. POST /reset?task=resume"
 RESUME_RESP=$(curl -s -X POST "$ENV_URL/reset?task=resume")
 RESUME_TASK=$(echo "$RESUME_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('task_type',''))" 2>/dev/null || echo "")
 check "task_type == 'resume'" "[ '$RESUME_TASK' = 'resume' ]"
 
-# -----------------------------------------------------------------------
-# 7. POST /reset?task=offer
-# -----------------------------------------------------------------------
+
 echo ""
 echo "7. POST /reset?task=offer"
 OFFER_RESP=$(curl -s -X POST "$ENV_URL/reset?task=offer")
@@ -131,18 +117,14 @@ check "task_type == 'offer'" "[ '$OFFER_TASK' = 'offer' ]"
 BUDGET=$(echo "$OFFER_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('budget',0))" 2>/dev/null || echo "0")
 check "budget > 0" "[ '$BUDGET' -gt 0 ] 2>/dev/null"
 
-# -----------------------------------------------------------------------
-# 8. POST /reset?task=communication
-# -----------------------------------------------------------------------
+
 echo ""
 echo "8. POST /reset?task=communication"
 COMM_RESP=$(curl -s -X POST "$ENV_URL/reset?task=communication")
 COMM_TASK=$(echo "$COMM_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('task_type',''))" 2>/dev/null || echo "")
 check "task_type == 'communication'" "[ '$COMM_TASK' = 'communication' ]"
 
-# -----------------------------------------------------------------------
-# 9. Adversarial test — write_email with prompt injection name
-# -----------------------------------------------------------------------
+
 echo ""
 echo "9. Adversarial prompt injection test"
 COMM_SID=$(echo "$COMM_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('session_id',''))" 2>/dev/null || echo "")
@@ -156,9 +138,7 @@ print('safe' if bd.get('prompt_injection_penalty',0) >= 0 else 'injected')
 " 2>/dev/null || echo "unknown")
 check "adversarial candidate handled safely" "[ '$ADV_PENALTY' = 'safe' ]"
 
-# -----------------------------------------------------------------------
-# 10. GET /baseline — verify all 3 tasks scored
-# -----------------------------------------------------------------------
+
 echo ""
 echo "10. GET /baseline"
 BASELINE_RESP=$(curl -s "$ENV_URL/baseline")
@@ -173,9 +153,7 @@ print('ok' if all_ok else 'bad')
 " 2>/dev/null || echo "bad")
 check "all baseline scores in [0, 1]" "[ '$BL_SCORES_OK' = 'ok' ]"
 
-# -----------------------------------------------------------------------
-# 11. GET /eval — verify bias_report field for resume task
-# -----------------------------------------------------------------------
+
 echo ""
 echo "11. GET /eval"
 EVAL_RESP=$(curl -s "$ENV_URL/eval")
@@ -187,9 +165,7 @@ print('yes' if resume_task and 'bias_report' in resume_task[0] else 'no')
 " 2>/dev/null || echo "no")
 check "bias_report field present for resume task" "[ '$HAS_BIAS' = 'yes' ]"
 
-# -----------------------------------------------------------------------
-# 12. Concurrent session test
-# -----------------------------------------------------------------------
+
 echo ""
 echo "12. Concurrent session isolation"
 S1=$(curl -s -X POST "$ENV_URL/reset?task=resume")
@@ -208,6 +184,7 @@ S2_STATE=$(curl -s "$ENV_URL/state?session_id=$S2_ID")
 S2_STEPS=$(echo "$S2_STATE" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['step_count'])" 2>/dev/null || echo "-1")
 check "session 2 unaffected by session 1 step" "[ '$S2_STEPS' = '0' ]"
 
+
 # -----------------------------------------------------------------------
 # 13. OpenEnv YAML spec check
 # -----------------------------------------------------------------------
@@ -215,23 +192,19 @@ echo ""
 echo "13. OpenEnv spec check"
 if [ -f "openenv.yaml" ]; then
     check "openenv.yaml exists" "true"
-    HAS_NAME=$(grep -c '^name:' openenv.yaml || echo "0")
-    check "openenv.yaml has 'name' field" "[ '$HAS_NAME' -gt 0 ]"
-    HAS_TASKS=$(grep -c '^tasks:' openenv.yaml || echo "0")
-    check "openenv.yaml has 'tasks' field" "[ '$HAS_TASKS' -gt 0 ]"
-    HAS_ENDPOINTS=$(grep -c '^endpoints:' openenv.yaml || echo "0")
-    check "openenv.yaml has 'endpoints' field" "[ '$HAS_ENDPOINTS' -gt 0 ]"
-    HAS_SESSION=$(grep -c '^session:' openenv.yaml || echo "0")
-    check "openenv.yaml has 'session' field" "[ '$HAS_SESSION' -gt 0 ]"
-    HAS_FRAMEWORK=$(grep -c '^framework:' openenv.yaml || echo "0")
-    check "openenv.yaml has 'framework' field" "[ '$HAS_FRAMEWORK' -gt 0 ]"
+    HAS_NAME=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'name' in d else 'no')" 2>/dev/null || echo "no")
+    check "openenv.yaml has 'name' field" "[ '$HAS_NAME' = 'yes' ]"
+    HAS_SPEC=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'spec_version' in d else 'no')" 2>/dev/null || echo "no")
+    check "openenv.yaml has 'spec_version' field" "[ '$HAS_SPEC' = 'yes' ]"
+    HAS_RUNTIME=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'runtime' in d else 'no')" 2>/dev/null || echo "no")
+    check "openenv.yaml has 'runtime' field" "[ '$HAS_RUNTIME' = 'yes' ]"
+    HAS_PORT=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'port' in d else 'no')" 2>/dev/null || echo "no")
+    check "openenv.yaml has 'port' field" "[ '$HAS_PORT' = 'yes' ]"
 else
     check "openenv.yaml exists" "false"
 fi
 
-# -----------------------------------------------------------------------
-# Results
-# -----------------------------------------------------------------------
+
 echo ""
 echo "=============================================="
 echo "  Results: $PASS passed, $FAIL failed"

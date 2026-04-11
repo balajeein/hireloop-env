@@ -7,14 +7,12 @@ Includes skill category matching and negotiation eligibility logic.
 
 from typing import List, Dict, Optional
 from models import Candidate, JobDescription, HireLoopState
-from hireloop.utils.skills import (
+from utils.skills import (
     SKILL_CATEGORIES, get_skill_category,
     are_skills_similar, check_negotiation_eligibility
 )
 
-# ---------------------------------------------------------------------------
-# RESET — Offer Decision
-# ---------------------------------------------------------------------------
+
 def reset(scenario: dict, rng) -> tuple:
     """
     Initialize an offer decision episode from a scenario.
@@ -101,9 +99,7 @@ def reset(scenario: dict, rng) -> tuple:
     return state, correct_shortlist, max_steps, scenario["id"], negotiation_hints
 
 
-# ---------------------------------------------------------------------------
-# STEP — Offer Decision
-# ---------------------------------------------------------------------------
+
 def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
          last_action, max_steps: int, negotiation_hints: dict) -> tuple:
     """
@@ -170,7 +166,8 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
     job_skills = list(state.job_description.required_skills)
     eligibility = check_negotiation_eligibility(candidate.skills, job_skills)
 
-    # --- Handle based on action type ---
+
+
 
     if action_type == "offer":
         # Standard full offer — only valid for full skill match
@@ -269,7 +266,8 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
 
     new_spend = current_spend + actual_salary
 
-    # --- Reward signals ---
+
+
 
     # Role fit score
     job_skills_set = set(state.job_description.required_skills)
@@ -335,9 +333,7 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
     return state_dict, reward, done, info
 
 
-# ---------------------------------------------------------------------------
-# SCORE — Offer Decision (final episode score, 0.0–1.0)
-# ---------------------------------------------------------------------------
+
 def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) -> float:
     """Compute final episode score for offer decision."""
     if not state.offers_made:

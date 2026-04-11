@@ -49,9 +49,7 @@ Rules:
 """
 
 
-# ==============================================================================
-# REQUIRED STDOUT LOGGING FUNCTIONS
-# ==============================================================================
+
 
 def log_start(task: str, env: str, model: str) -> None:
     """Emit START line to stdout."""
@@ -78,9 +76,7 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
     )
 
 
-# ==============================================================================
-# AGENT LOGIC
-# ==============================================================================
+
 
 def get_llm_action(state: dict, task_type: str) -> dict:
     """Ask the LLM what action to take given current state."""

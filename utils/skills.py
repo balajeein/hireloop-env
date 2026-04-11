@@ -8,9 +8,7 @@ Extracted from hireloop/tasks/offer.py — no logic changes.
 from typing import Optional, List
 
 
-# ---------------------------------------------------------------------------
-# Skill similarity categories — two skills are similar if same category
-# ---------------------------------------------------------------------------
+
 SKILL_CATEGORIES = {
     "frontend": ["react", "vue", "angular", "svelte", "javascript", "typescript", "html", "css", "redux", "node", "nodejs"],
     "backend": ["express", "django", "flask", "fastapi", "spring", "rails", "laravel", "graphql"],

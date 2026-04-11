@@ -44,8 +44,8 @@ except (ImportError, TypeError):
             return observation
 
 
-from hireloop.tasks import resume, offer, communication
-from hireloop.utils.skills import check_negotiation_eligibility
+from tasks import resume, offer, communication
+from utils.skills import check_negotiation_eligibility
 
 
 class HireLoopEnv(Environment):
@@ -82,9 +82,7 @@ class HireLoopEnv(Environment):
         with open(scenarios_path, "r") as f:
             self.scenarios = json.load(f)
 
-    # -----------------------------------------------------------------------
-    # Required by openenv Environment base class
-    # -----------------------------------------------------------------------
+
 
     @property
     def state(self) -> BaseState:
@@ -210,9 +208,7 @@ class HireLoopEnv(Environment):
         obs = self._build_observation(reward=rw, done=done, info=info)
         return self._apply_transform(obs)
 
-    # -----------------------------------------------------------------------
-    # HireLoop-specific methods
-    # -----------------------------------------------------------------------
+
 
     def reset_with_task(self, task_type: str) -> HireLoopObservation:
         """Reset with a specific task type (used by /reset?task=...)."""
@@ -262,9 +258,7 @@ class HireLoopEnv(Environment):
         else:
             return 0.0
 
-    # -----------------------------------------------------------------------
-    # STATE VIEW — legacy method for /state endpoint
-    # -----------------------------------------------------------------------
+
     def state_view(self):
         """Legacy method for /state endpoint. Returns raw dict."""
         if self._state is None:
@@ -301,9 +295,7 @@ class HireLoopEnv(Environment):
             return state_dict
         return self._state.model_dump()
 
-    # -----------------------------------------------------------------------
-    # DECISION QUALITY — mapped from final episode score
-    # -----------------------------------------------------------------------
+
     def _get_decision_quality(self, final_score: float) -> str:
         if final_score >= 0.75:
             return "high"
@@ -312,9 +304,7 @@ class HireLoopEnv(Environment):
         else:
             return "low"
 
-    # -----------------------------------------------------------------------
-    # BUILD OBSERVATION — converts HireLoopState to HireLoopObservation
-    # -----------------------------------------------------------------------
+
     def _build_observation(self, reward, done, info) -> HireLoopObservation:
         """Convert internal HireLoopState → HireLoopObservation (openenv format)."""
         if self._state is None:
@@ -343,9 +333,7 @@ class HireLoopEnv(Environment):
             negotiation_hints=self.negotiation_hints if self._state.task_type == "offer" else None,
         )
 
-    # -----------------------------------------------------------------------
-    # COUNTERFACTUAL AUDIT
-    # -----------------------------------------------------------------------
+
     def _build_counterfactual(self) -> Dict:
         """
         Builds a counterfactual audit showing what the optimal agent

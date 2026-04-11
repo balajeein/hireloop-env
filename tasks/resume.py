@@ -8,9 +8,7 @@ from typing import List, Dict, Optional
 from models import Candidate, JobDescription, HireLoopState
 
 
-# ---------------------------------------------------------------------------
-# RESET — Resume Screening
-# ---------------------------------------------------------------------------
+
 def reset(scenario: dict, rng) -> tuple:
     """
     Initialize a resume screening episode from a scenario.
@@ -56,9 +54,7 @@ def reset(scenario: dict, rng) -> tuple:
     return state, correct_shortlist, max_steps, scenario["id"]
 
 
-# ---------------------------------------------------------------------------
-# STEP — Resume Screening
-# ---------------------------------------------------------------------------
+
 def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
          last_action, max_steps: int) -> tuple:
     """
@@ -162,9 +158,7 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
     return state, reward, done, info
 
 
-# ---------------------------------------------------------------------------
-# SCORE — Resume Screening (final episode score, 0.0–1.0)
-# ---------------------------------------------------------------------------
+
 def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) -> float:
     """Compute final episode score for resume screening."""
     selected = set(state.shortlisted)
@@ -190,9 +184,7 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     return max(0.0, min(1.0, round(final, 4))), bias_result
 
 
-# ---------------------------------------------------------------------------
-# BIAS AUDIT — checks shortlisted candidates for diversity bias
-# ---------------------------------------------------------------------------
+
 def _check_diversity_bias(state: HireLoopState) -> dict:
     """
     Checks shortlisted candidates for diversity bias.

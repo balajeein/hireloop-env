@@ -10,7 +10,7 @@ import uuid
 import time
 from typing import Dict, Optional
 
-from hireloop.env import HireLoopEnv
+from server.env import HireLoopEnv
 
 _sessions: Dict[str, HireLoopEnv] = {}
 _session_timestamps: Dict[str, float] = {}
