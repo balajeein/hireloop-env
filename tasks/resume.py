@@ -181,7 +181,7 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     bias_penalty = bias_result["penalty"]
 
     final = (accuracy * 0.5) + (precision * 0.3) + speed_bonus - wrong_penalty + bias_penalty
-    return max(0.0, min(1.0, round(final, 4))), bias_result
+    return max(0.001, min(0.999, round(final, 4))), bias_result
 
 
 

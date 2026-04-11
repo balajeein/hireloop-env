@@ -209,7 +209,7 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
         breakdown = score_email(email["content"], email["candidate_id"], state)
 
         # Normalize individual email score to 0-1
-        normalized = max(0.0, min(1.0, (breakdown["total"] + 1.0) / 2.0))
+        normalized = max(0.001, min(0.999, (breakdown["total"] + 1.0) / 2.0))
         email_scores.append(normalized)
 
         # Track context awareness separately
@@ -237,4 +237,4 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     # Context awareness now has significant weight
     # Agent cannot score well with template emails alone
     final = (avg_email_score * 0.35) + (avg_context_score * 0.35) + (coverage * 0.2) + audit_bonus
-    return max(0.0, min(1.0, round(final, 4)))
+    return max(0.001, min(0.999, round(final, 4)))

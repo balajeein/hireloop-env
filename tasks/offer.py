@@ -368,4 +368,4 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     speed_bonus = max(0, (max_steps - steps_used) / max_steps) * 0.1
 
     final = (avg_fit * 0.5) + (budget_score * 0.4) + speed_bonus
-    return max(0.0, min(1.0, round(final, 4)))
+    return max(0.001, min(0.999, round(final, 4)))
