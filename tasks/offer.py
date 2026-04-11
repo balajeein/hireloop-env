@@ -337,7 +337,7 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
 def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) -> float:
     """Compute final episode score for offer decision."""
     if not state.offers_made:
-        return 0.0
+        return 0.001
 
     job_skills = set(state.job_description.required_skills)
 

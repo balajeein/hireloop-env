@@ -235,7 +235,7 @@ class HireLoopEnv(Environment):
     def compute_final_score(self) -> float:
         """Compute the final episode score (0.0–1.0)."""
         if self._state is None:
-            return 0.0
+            return 0.001
 
         task = self._state.task_type
 
@@ -256,7 +256,7 @@ class HireLoopEnv(Environment):
                 self._state, self.correct_shortlist, self.max_steps
             )
         else:
-            return 0.0
+            return 0.001
 
 
     def state_view(self):

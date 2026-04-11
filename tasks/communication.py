@@ -200,7 +200,7 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
 def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) -> float:
     """Compute final episode score for communication drafting."""
     if not state.emails_sent:
-        return 0.0
+        return 0.001
 
     email_scores = []
     context_scores = []
@@ -221,7 +221,7 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
             breakdown.get("encouragement", 0.0)
         )
         # Normalize context score to 0-1 (max possible is 0.6)
-        context_normalized = min(1.0, context / 0.6)
+        context_normalized = min(0.999, context / 0.6)
         context_scores.append(context_normalized)
 
     avg_email_score = sum(email_scores) / len(email_scores) if email_scores else 0
