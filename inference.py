@@ -132,9 +132,11 @@ def get_llm_action(state: dict, task_type: str) -> dict:
 def run_task(task_type: str) -> dict:
     """Run one full episode for a given task type."""
     
-    # Reset environment
-    resp = requests.get(f"{ENV_BASE_URL}/reset", params={"task": task_type})
-    state = resp.json()["state"]
+    # Reset environment using POST to get session_id
+    resp = requests.post(f"{ENV_BASE_URL}/reset", params={"task": task_type})
+    data = resp.json()
+    session_id = data.get("session_id")
+    state = data["observation"]
 
     total_reward = 0.0
     step = 0
@@ -162,11 +164,11 @@ def run_task(task_type: str) -> dict:
         candidate_id = action.get('candidate_id', 'none')
         action_str = f"{action_type}('{candidate_id}')"
 
-        # Execute action
+        # Execute action with session_id
         try:
             resp = requests.post(
                 f"{ENV_BASE_URL}/step",
-                json=action,
+                json={"session_id": session_id, "action": action},
                 headers={"Content-Type": "application/json"}
             )
             result = resp.json()
@@ -185,9 +187,9 @@ def run_task(task_type: str) -> dict:
             log_step(step=step, action=action_str, reward=0.0, done=False, error=error_msg)
             break
 
-    # Get final score
+    # Get final score using session_id
     try:
-        resp = requests.get(f"{ENV_BASE_URL}/grader")
+        resp = requests.get(f"{ENV_BASE_URL}/grader", params={"session_id": session_id})
         final_score = resp.json()["score"]
     except Exception:
         final_score = 0.0

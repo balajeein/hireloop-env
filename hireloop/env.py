@@ -1,6 +1,7 @@
 """
-HireLoop Environment — Thin Orchestrator
-==========================================
+HireLoop Environment — OpenEnv-Core Compliant Orchestrator
+============================================================
+Inherits from openenv_core Environment base class.
 Delegates task-specific logic to hireloop.tasks.{resume, offer, communication}.
 """
 
@@ -8,15 +9,62 @@ from typing import List, Dict, Optional
 import random
 import json
 import os
+from models import (
+    HireLoopAction, HireLoopObservation, HireLoopState,
+    BaseState,
+)
 
-from models import HireLoopState
+# Import Environment base class — real or shim
+try:
+    from openenv_core.env_server.interfaces import Environment
+except (ImportError, TypeError):
+    from abc import ABC, abstractmethod
+
+    class Environment(ABC):
+        """Shim for openenv_core.env_server.interfaces.Environment"""
+        def __init__(self, transform=None):
+            self.transform = transform
+
+        @abstractmethod
+        def reset(self) -> object:
+            pass
+
+        @abstractmethod
+        def step(self, action) -> object:
+            pass
+
+        @property
+        @abstractmethod
+        def state(self) -> object:
+            pass
+
+        def _apply_transform(self, observation):
+            if self.transform is not None:
+                return self.transform(observation)
+            return observation
+
+
 from hireloop.tasks import resume, offer, communication
 from hireloop.tasks.offer import check_negotiation_eligibility
 
 
-class HireLoopEnv:
+class HireLoopEnv(Environment):
+    """
+    HireLoop: Multi-step hiring pipeline RL environment.
+    Tests agents on fairness, budget reasoning, safety, and adversarial robustness.
+
+    Compliant with openenv-core Environment interface:
+    - reset() -> HireLoopObservation
+    - step(action) -> HireLoopObservation
+    - state -> BaseState
+    """
+
+    # Tells openenv-core that this env supports concurrent sessions
+    SUPPORTS_CONCURRENT_SESSIONS = True
+
     def __init__(self):
-        self.state: Optional[HireLoopState] = None
+        super().__init__()
+        self._state: Optional[HireLoopState] = None
         self.max_steps = 10
         self.correct_shortlist: List[str] = []
         self.last_action = None
@@ -25,6 +73,7 @@ class HireLoopEnv:
         self.negotiation_hints: dict = {}
         self.current_scenario_id: str = ""
         self._last_bias_explanation: str = "Bias check: not run yet."
+        self._episode_id: Optional[str] = None
 
         # Load scenarios from JSON file
         scenarios_path = os.path.join(
@@ -34,13 +83,138 @@ class HireLoopEnv:
             self.scenarios = json.load(f)
 
     # -----------------------------------------------------------------------
-    # RESET — randomly picks a task_type and builds appropriate data
+    # Required by openenv Environment base class
     # -----------------------------------------------------------------------
-    def reset(self) -> HireLoopState:
+
+    @property
+    def state(self) -> BaseState:
+        """Required abstract property from Environment base class."""
+        return BaseState(
+            episode_id=self._episode_id,
+            step_count=self._state.step_count if self._state else 0,
+        )
+
+    def reset(self, **kwargs) -> HireLoopObservation:
+        """
+        Reset the environment (openenv-compliant).
+
+        Kwargs:
+            task: str — "resume", "offer", or "communication"
+            seed: int — optional RNG seed
+            episode_id: str — optional episode identifier
+        """
+        # Handle openenv kwargs
+        seed = kwargs.get("seed")
+        if seed is not None:
+            self.rng = random.Random(seed)
+
+        self._episode_id = kwargs.get("episode_id")
+
+        task_type = kwargs.get("task")
+        if task_type and task_type in ("resume", "offer", "communication"):
+            return self.reset_with_task(task_type)
         task_type = self.rng.choice(["resume", "offer", "communication"])
         return self.reset_with_task(task_type)
 
-    def reset_with_task(self, task_type: str) -> HireLoopState:
+    def step(self, action, **kwargs) -> HireLoopObservation:
+        """
+        Take a step in the environment (openenv-compliant).
+
+        Accepts either a HireLoopAction dataclass or a plain dict.
+        Returns a HireLoopObservation with done, reward, metadata fields.
+        """
+        if self._state is None:
+            raise Exception("Environment not initialized. Call reset() first.")
+
+        # Support both HireLoopAction dataclass and raw dict
+        if isinstance(action, HireLoopAction):
+            action_dict = {
+                "type": action.type,
+                "candidate_id": action.candidate_id,
+            }
+            if action.content is not None:
+                action_dict["content"] = action.content
+        elif isinstance(action, dict):
+            action_dict = action
+        else:
+            # Fallback: try to convert to dict
+            if hasattr(action, 'model_dump'):
+                action_dict = action.model_dump()
+            else:
+                action_dict = vars(action) if hasattr(action, '__dict__') else {}
+
+        task = self._state.task_type
+        rw = 0.0
+        done = False
+        info = {}
+
+        if task == "resume":
+            new_state, rw, done, info = resume.step(
+                self._state, action_dict, self.correct_shortlist,
+                self.last_action, self.max_steps
+            )
+            self._state = new_state
+            if done:
+                final_score = self.compute_final_score()
+                info["final_score"] = final_score
+                info["decision_quality"] = self._get_decision_quality(final_score)
+                info["final_explanation"] = (
+                    f"Final score {final_score:.2f} — "
+                    f"{info['decision_quality']} quality hiring decisions."
+                )
+                info["bias_report"] = self._last_bias_explanation
+
+        elif task == "offer":
+            result = offer.step(
+                self._state, action_dict, self.correct_shortlist,
+                self.last_action, self.max_steps, self.negotiation_hints
+            )
+            obs, rw, done, info = result
+            # offer.step returns state_dict when successful
+            if isinstance(obs, dict):
+                self._state = HireLoopState(**{
+                    k: v for k, v in obs.items()
+                    if k != "negotiation_hints"
+                })
+            else:
+                self._state = obs
+            if done:
+                final_score = self.compute_final_score()
+                info["final_score"] = final_score
+                info["decision_quality"] = self._get_decision_quality(final_score)
+                info["final_explanation"] = (
+                    f"Final score {final_score:.2f} — "
+                    f"{info['decision_quality']} quality hiring decisions."
+                )
+
+        elif task == "communication":
+            new_state, rw, done, info = communication.step(
+                self._state, action_dict, self.correct_shortlist,
+                self.last_action, self.max_steps
+            )
+            self._state = new_state
+            if done:
+                final_score = self.compute_final_score()
+                info["final_score"] = final_score
+                info["decision_quality"] = self._get_decision_quality(final_score)
+                info["final_explanation"] = (
+                    f"Final score {final_score:.2f} — "
+                    f"{info['decision_quality']} quality hiring decisions."
+                )
+        else:
+            raise Exception(f"Unknown task_type: {task}")
+
+        self.last_action = action_dict
+
+        # Return openenv-compliant Observation
+        obs = self._build_observation(reward=rw, done=done, info=info)
+        return self._apply_transform(obs)
+
+    # -----------------------------------------------------------------------
+    # HireLoop-specific methods
+    # -----------------------------------------------------------------------
+
+    def reset_with_task(self, task_type: str) -> HireLoopObservation:
         """Reset with a specific task type (used by /reset?task=...)."""
         scenario = self.rng.choice(self.scenarios)
 
@@ -54,98 +228,24 @@ class HireLoopEnv:
             state, cs, ms, sid = resume.reset(scenario, self.rng)
             self.negotiation_hints = {}
 
-        self.state = state
+        self._state = state
         self.correct_shortlist = cs
         self.max_steps = ms
         self.current_scenario_id = sid
         self.last_action = None
-        return self.state
 
-    # -----------------------------------------------------------------------
-    # STEP — branches logic based on task_type
-    # -----------------------------------------------------------------------
-    def step(self, action: Dict):
-        if self.state is None:
-            raise Exception("Environment not initialized. Call reset().")
+        return self._build_observation(reward=None, done=False, info={})
 
-        task = self.state.task_type
-
-        if task == "resume":
-            state, rw, done, info = resume.step(
-                self.state, action, self.correct_shortlist,
-                self.last_action, self.max_steps
-            )
-            self.state = state
-            if done:
-                final_score = self.compute_final_score()
-                info["final_score"] = final_score
-                info["decision_quality"] = self._get_decision_quality(final_score)
-                info["final_explanation"] = (
-                    f"Final score {final_score:.2f} — "
-                    f"{info['decision_quality']} quality hiring decisions."
-                )
-                info["bias_report"] = self._last_bias_explanation
-
-        elif task == "offer":
-            result = offer.step(
-                self.state, action, self.correct_shortlist,
-                self.last_action, self.max_steps, self.negotiation_hints
-            )
-            obs, rw, done, info = result
-            # offer.step returns state_dict when successful
-            if isinstance(obs, dict):
-                self.state = HireLoopState(**{
-                    k: v for k, v in obs.items()
-                    if k != "negotiation_hints"
-                })
-            else:
-                self.state = obs
-            if done:
-                final_score = self.compute_final_score()
-                info["final_score"] = final_score
-                info["decision_quality"] = self._get_decision_quality(final_score)
-                info["final_explanation"] = (
-                    f"Final score {final_score:.2f} — "
-                    f"{info['decision_quality']} quality hiring decisions."
-                )
-            state = obs
-
-        elif task == "communication":
-            state, rw, done, info = communication.step(
-                self.state, action, self.correct_shortlist,
-                self.last_action, self.max_steps
-            )
-            self.state = state
-            if done:
-                final_score = self.compute_final_score()
-                info["final_score"] = final_score
-                info["decision_quality"] = self._get_decision_quality(final_score)
-                info["final_explanation"] = (
-                    f"Final score {final_score:.2f} — "
-                    f"{info['decision_quality']} quality hiring decisions."
-                )
-        else:
-            raise Exception(f"Unknown task_type: {task}")
-
-        self.last_action = action
-
-        # For offer task, return the dict with negotiation_hints
-        if task == "offer":
-            return state, rw, done, info
-        return self.state, rw, done, info
-
-    # -----------------------------------------------------------------------
-    # COMPUTE FINAL SCORE — branches by task_type, always 0.0–1.0
-    # -----------------------------------------------------------------------
     def compute_final_score(self) -> float:
-        if self.state is None:
+        """Compute the final episode score (0.0–1.0)."""
+        if self._state is None:
             return 0.0
 
-        task = self.state.task_type
+        task = self._state.task_type
 
         if task == "resume":
             result = resume.score(
-                self.state, self.correct_shortlist, self.max_steps
+                self._state, self.correct_shortlist, self.max_steps
             )
             # resume.score returns (score, bias_result) tuple
             score_val, bias_result = result
@@ -153,52 +253,53 @@ class HireLoopEnv:
             return score_val
         elif task == "offer":
             return offer.score(
-                self.state, self.correct_shortlist, self.max_steps
+                self._state, self.correct_shortlist, self.max_steps
             )
         elif task == "communication":
             return communication.score(
-                self.state, self.correct_shortlist, self.max_steps
+                self._state, self.correct_shortlist, self.max_steps
             )
         else:
             return 0.0
 
     # -----------------------------------------------------------------------
-    # STATE VIEW
+    # STATE VIEW — legacy method for /state endpoint
     # -----------------------------------------------------------------------
     def state_view(self):
-        if self.state is None:
+        """Legacy method for /state endpoint. Returns raw dict."""
+        if self._state is None:
             return None
 
-        task = self.state.task_type
+        task = self._state.task_type
 
         if task == "resume":
             episode_done = (
-                len(self.state.shortlisted) >= 3
-                or self.state.step_count >= self.max_steps
+                len(self._state.shortlisted) >= 3
+                or self._state.step_count >= self.max_steps
             )
         elif task == "offer":
             episode_done = (
-                self.state.step_count >= self.max_steps
-                or len(self.state.offers_made or []) >= len(self.state.candidates)
+                self._state.step_count >= self.max_steps
+                or len(self._state.offers_made or []) >= len(self._state.candidates)
             )
         elif task == "communication":
             episode_done = (
-                self.state.step_count >= self.max_steps
-                or len(self.state.emails_sent or []) >= len(self.state.candidates)
+                self._state.step_count >= self.max_steps
+                or len(self._state.emails_sent or []) >= len(self._state.candidates)
             )
         else:
             episode_done = False
 
         if episode_done:
-            self.state.counterfactual = self._build_counterfactual()
+            self._state.counterfactual = self._build_counterfactual()
         else:
-            self.state.counterfactual = None
+            self._state.counterfactual = None
 
-        if self.state.task_type == "offer":
-            state_dict = self.state.model_dump()
+        if self._state.task_type == "offer":
+            state_dict = self._state.model_dump()
             state_dict["negotiation_hints"] = self.negotiation_hints
             return state_dict
-        return self.state.model_dump()
+        return self._state.model_dump()
 
     # -----------------------------------------------------------------------
     # DECISION QUALITY — mapped from final episode score
@@ -212,6 +313,37 @@ class HireLoopEnv:
             return "low"
 
     # -----------------------------------------------------------------------
+    # BUILD OBSERVATION — converts HireLoopState to HireLoopObservation
+    # -----------------------------------------------------------------------
+    def _build_observation(self, reward, done, info) -> HireLoopObservation:
+        """Convert internal HireLoopState → HireLoopObservation (openenv format)."""
+        if self._state is None:
+            return HireLoopObservation(done=done, reward=reward, metadata=info)
+
+        state_dict = self._state.model_dump()
+
+        # Candidates and job_description: convert Pydantic to plain dicts
+        candidates = [c.model_dump() for c in self._state.candidates]
+        job_desc = self._state.job_description.model_dump()
+
+        return HireLoopObservation(
+            done=done,
+            reward=reward,
+            metadata=info,
+            job_description=job_desc,
+            candidates=candidates,
+            shortlisted=list(self._state.shortlisted),
+            rejected=list(self._state.rejected),
+            step_count=self._state.step_count,
+            task_type=self._state.task_type,
+            budget=self._state.budget,
+            offers_made=self._state.offers_made,
+            emails_sent=self._state.emails_sent,
+            counterfactual=self._state.counterfactual,
+            negotiation_hints=self.negotiation_hints if self._state.task_type == "offer" else None,
+        )
+
+    # -----------------------------------------------------------------------
     # COUNTERFACTUAL AUDIT
     # -----------------------------------------------------------------------
     def _build_counterfactual(self) -> Dict:
@@ -219,8 +351,8 @@ class HireLoopEnv:
         Builds a counterfactual audit showing what the optimal agent
         would have done differently. Only meaningful for resume and offer tasks.
         """
-        task = self.state.task_type
-        agent_picks = list(self.state.shortlisted)
+        task = self._state.task_type
+        agent_picks = list(self._state.shortlisted)
 
         if task == "resume":
             optimal = self.correct_shortlist
@@ -229,7 +361,7 @@ class HireLoopEnv:
             unnecessary = list(set(agent_picks) - set(optimal))
 
             def candidate_name(cid):
-                c = next((x for x in self.state.candidates if x.id == cid), None)
+                c = next((x for x in self._state.candidates if x.id == cid), None)
                 return c.name if c else cid
 
             if len(correct_hits) == len(optimal):
@@ -263,13 +395,13 @@ class HireLoopEnv:
             unnecessary = list(set(agent_picks) - set(optimal))
 
             total_spend = sum(
-                c.expected_salary for c in self.state.candidates
+                c.expected_salary for c in self._state.candidates
                 if c.id in agent_picks
             )
             budget_status = (
                 "within budget"
-                if total_spend <= (self.state.budget or 0)
-                else f"over budget by {total_spend - (self.state.budget or 0)}"
+                if total_spend <= (self._state.budget or 0)
+                else f"over budget by {total_spend - (self._state.budget or 0)}"
             )
 
             return {
@@ -279,7 +411,7 @@ class HireLoopEnv:
                 "missed": missed,
                 "unnecessary": unnecessary,
                 "total_spend": total_spend,
-                "budget": self.state.budget,
+                "budget": self._state.budget,
                 "budget_status": budget_status,
                 "verdict": (
                     f"Agent made {len(correct_hits)}/{len(optimal)} optimal offers. "
@@ -288,8 +420,8 @@ class HireLoopEnv:
             }
 
         elif task == "communication":
-            emails_sent = [e["candidate_id"] for e in (self.state.emails_sent or [])]
-            all_ids = [c.id for c in self.state.candidates]
+            emails_sent = [e["candidate_id"] for e in (self._state.emails_sent or [])]
+            all_ids = [c.id for c in self._state.candidates]
             missed_emails = list(set(all_ids) - set(emails_sent))
             adv_handled = "adv1" in emails_sent
 

@@ -4,28 +4,31 @@ description: >
   A multi-step reinforcement learning environment simulating a real-world
   hiring pipeline. Tests LLM agents on fairness, legal safety, budget
   reasoning, and adversarial robustness across 3 escalating tasks.
+  First hiring environment in the OpenEnv ecosystem.
 
-author: "your-hf-username"
+author: "balajeein"
 license: "MIT"
+framework: "openenv-core"
 
 tasks:
   - name: resume_screening
     difficulty: easy
     max_steps: 15
-    description: "Select top candidates based on skill match and experience"
+    description: "Select top candidates based on skill match, experience, and diversity"
 
   - name: offer_decision
     difficulty: medium
     max_steps: 10
-    description: "Make offers within budget constraints"
+    description: "Make offers within budget constraints using negotiation eligibility"
 
   - name: communication_drafting
     difficulty: hard
-    max_steps: 10
-    description: "Write safe, professional rejection emails. Includes adversarial input."
+    max_steps: 8
+    description: "Write safe, professional rejection emails. Includes adversarial prompt injection."
 
 action_space:
-  type: dict
+  type: HireLoopAction
+  base_class: "openenv_core.env_server.types.Action"
   fields:
     - name: type
       type: string
@@ -35,13 +38,17 @@ action_space:
     - name: content
       type: string
       required: false
-    - name: negotiated_salary
-      type: integer
-      required: false
 
 observation_space:
-  type: dict
+  type: HireLoopObservation
+  base_class: "openenv_core.env_server.types.Observation"
   fields:
+    - name: done
+      type: boolean
+    - name: reward
+      type: float
+    - name: metadata
+      type: dict
     - name: job_description
       type: object
     - name: candidates
@@ -61,6 +68,11 @@ reward:
   type: float
   shaped: true
 
+session:
+  type: uuid
+  supports_concurrent: true
+  description: "POST /reset returns session_id. Pass in all subsequent /step, /state, /grader calls."
+
 endpoints:
   reset: "POST /reset"
   step: "POST /step"
@@ -72,11 +84,9 @@ endpoints:
   tasks: "GET /tasks"
   ui: "GET /ui"
 
-session:
-  type: uuid
-  header: session_id
-  description: "Each /reset call returns a session_id. Pass it in all subsequent /step, /state, /grader calls."
-
 docker:
   port: 7860
-  base_image: "python:3.10"
+  base_image: "python:3.11"
+
+concurrent_sessions: true
+supports_websocket: false

@@ -1,17 +1,27 @@
+"""
+HireLoop Environment API
+=========================
+FastAPI server exposing the HireLoop environment via HTTP.
+Uses openenv-core compliant types (HireLoopAction, HireLoopObservation).
+"""
+
+from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
-from fastapi import FastAPI, Query
-from typing import Dict, Optional
-
+from typing import Optional
+from models import HireLoopAction, HireLoopObservation
 from hireloop.env import HireLoopEnv
 from hireloop.session import (
     create_session, get_session, delete_session, get_or_create_legacy_session
 )
 from hireloop.tasks.offer import check_negotiation_eligibility
-from models import Action, StepRequest
 
-app = FastAPI()
+app = FastAPI(
+    title="HireLoop Environment",
+    description="Multi-step hiring pipeline RL environment with fairness, safety, and adversarial robustness testing.",
+    version="1.0.0",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,9 +31,32 @@ app.add_middleware(
 )
 
 
+# -----------------------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------------------
+
+def _obs_to_response(obs: HireLoopObservation) -> dict:
+    obs_dict = obs.model_dump()
+    reward = obs_dict.pop("reward", None)
+    done = obs_dict.pop("done", False)
+    metadata = obs_dict.pop("metadata", {})
+
+    return {
+        "observation": obs_dict,
+        "reward": reward,
+        "done": done,
+        "info": metadata,
+    }
+
+
+# -----------------------------------------------------------------------
+# Root + Health + UI
+# -----------------------------------------------------------------------
+
 @app.get("/")
 def home():
     return {"message": "HireLoop Environment API is running"}
+
 
 @app.get("/health")
 def health():
@@ -31,8 +64,9 @@ def health():
         "status": "ok",
         "env": "hireloop",
         "version": "1.0.0",
-        "tasks": ["resume", "offer", "communication"]
+        "tasks": ["resume", "offer", "communication"],
     }
+
 
 @app.get("/ui", response_class=HTMLResponse)
 def web_interface():
@@ -44,18 +78,15 @@ def web_interface():
 
 # -----------------------------------------------------------------------
 # RESET — POST creates a new session; GET is legacy backward compat
-# POST /reset          → new session, random task
-# POST /reset?task=offer → new session, specific task
-# GET  /reset          → legacy mode (default session slot)
 # -----------------------------------------------------------------------
+
 @app.post("/reset")
 def reset_post(task: Optional[str] = Query(None, description="Task type: resume, offer, or communication")):
     session_id, env = create_session()
-    if task and task in ("resume", "offer", "communication"):
-        state = env.reset_with_task(task)
-    else:
-        state = env.reset()
-    return {"session_id": session_id, "state": state}
+    obs = env.reset(task=task) if task in ("resume", "offer", "communication") else env.reset()
+    resp = _obs_to_response(obs)
+    resp["session_id"] = session_id
+    return resp
 
 
 @app.get("/reset")
@@ -63,16 +94,17 @@ def reset_get(task: Optional[str] = Query(None, description="Task type: resume, 
     """Legacy backward-compatible reset — uses a default session slot."""
     _, env = get_or_create_legacy_session()
     if task and task in ("resume", "offer", "communication"):
-        state = env.reset_with_task(task)
+        env.reset(task=task)
     else:
-        state = env.reset()
-    return {"state": state}
+        env.reset()
+    # Legacy: return as "state" key for backward compat with inference.py
+    return {"state": env.state_view()}
 
 
 # -----------------------------------------------------------------------
-# STEP — accepts action + session_id, routes based on current task_type
-# Supports both session-based and legacy (no session_id) requests
+# STEP — accepts action + optional session_id
 # -----------------------------------------------------------------------
+
 @app.post("/step")
 def step(body: dict):
     # Support both StepRequest (with session_id) and plain Action
@@ -88,19 +120,28 @@ def step(body: dict):
         _, env = get_or_create_legacy_session()
         action_data = body
 
-    obs, reward, done, info = env.step(action_data)
+    # Build HireLoopAction and step
+    action = HireLoopAction(
+        type=action_data.get("type", ""),
+        candidate_id=action_data.get("candidate_id", ""),
+        content=action_data.get("content"),
+    )
+    obs = env.step(action)
 
-    return {
-        "observation": obs,
-        "reward": reward,
-        "done": done,
-        "info": info,
+    # For legacy compatibility, return state_view as observation
+    resp = {
+        "observation": env.state_view(),
+        "reward": obs.reward,
+        "done": obs.done,
+        "info": obs.metadata,
     }
+    return resp
 
 
 # -----------------------------------------------------------------------
 # STATE — supports session_id query param
 # -----------------------------------------------------------------------
+
 @app.get("/state")
 def state(session_id: Optional[str] = Query(None)):
     if session_id:
@@ -115,6 +156,7 @@ def state(session_id: Optional[str] = Query(None)):
 # -----------------------------------------------------------------------
 # GRADER — supports session_id query param
 # -----------------------------------------------------------------------
+
 @app.get("/grader")
 def grader(session_id: Optional[str] = Query(None)):
     if session_id:
@@ -124,7 +166,7 @@ def grader(session_id: Optional[str] = Query(None)):
     else:
         _, env = get_or_create_legacy_session()
     score = env.compute_final_score()
-    task_type = env.state.task_type if env.state else "unknown"
+    task_type = env._state.task_type if env._state else "unknown"
     return {
         "task_type": task_type,
         "score": score,
@@ -139,23 +181,29 @@ def _run_heuristic_task(env: HireLoopEnv, task_type: str) -> dict:
     Run a heuristic agent on one task and return results.
     Used by both /baseline and /eval endpoints.
     """
-    state = env.reset_with_task(task_type)
+    obs = env.reset(task=task_type)
     total_reward = 0.0
     steps_taken = 0
 
+    # Get state info from the observation
+    candidates = [type('C', (), c) for c in (obs.candidates or [])]
+    job_skills = set((obs.job_description or {}).get("required_skills", []))
+
+    # Re-get from internal state for proper Pydantic access
+    state = env._state
+
     # ------------------ RESUME ------------------
     if task_type == "resume":
-        job_skills = set(state.job_description.required_skills)
         for candidate in state.candidates:
             candidate_skills = set(candidate.skills)
             if len(candidate_skills & job_skills) >= 1:
-                action = {"type": "accept", "candidate_id": candidate.id}
+                action = HireLoopAction(type="accept", candidate_id=candidate.id)
             else:
-                action = {"type": "reject", "candidate_id": candidate.id}
-            _, reward, done, _ = env.step(action)
-            total_reward += reward
+                action = HireLoopAction(type="reject", candidate_id=candidate.id)
+            step_obs = env.step(action)
+            total_reward += step_obs.reward or 0
             steps_taken += 1
-            if done:
+            if step_obs.done:
                 break
 
     # ------------------ OFFER ------------------
@@ -170,24 +218,24 @@ def _run_heuristic_task(env: HireLoopEnv, task_type: str) -> dict:
                 list(state.job_description.required_skills)
             )
             if eligibility["negotiable"]:
-                action = {"type": "negotiate", "candidate_id": candidate.id}
+                action = HireLoopAction(type="negotiate", candidate_id=candidate.id)
             elif eligibility["eligible"]:
-                action = {"type": "offer", "candidate_id": candidate.id}
+                action = HireLoopAction(type="offer", candidate_id=candidate.id)
             else:
                 continue
-            _, reward, done, _ = env.step(action)
-            total_reward += reward
+            step_obs = env.step(action)
+            total_reward += step_obs.reward or 0
             steps_taken += 1
-            if done:
+            if step_obs.done:
                 break
 
     # ------------------ COMMUNICATION ------------------
     elif task_type == "communication":
         for candidate in state.candidates:
-            action = {
-                "type": "write_email",
-                "candidate_id": candidate.id,
-                "content": (
+            action = HireLoopAction(
+                type="write_email",
+                candidate_id=candidate.id,
+                content=(
                     f"Dear {candidate.name}, "
                     "Thank you for applying to our role. "
                     "Unfortunately, we have decided not to move forward "
@@ -196,11 +244,11 @@ def _run_heuristic_task(env: HireLoopEnv, task_type: str) -> dict:
                     "in your job search. "
                     "Sincerely, The Hiring Team"
                 ),
-            }
-            _, reward, done, _ = env.step(action)
-            total_reward += reward
+            )
+            step_obs = env.step(action)
+            total_reward += step_obs.reward or 0
             steps_taken += 1
-            if done:
+            if step_obs.done:
                 break
 
     final_score = env.compute_final_score()
@@ -209,7 +257,7 @@ def _run_heuristic_task(env: HireLoopEnv, task_type: str) -> dict:
 
     return {
         "task": task_type,
-        "role": env.state.job_description.role,
+        "role": env._state.job_description.role,
         "scenario_id": getattr(env, "current_scenario_id", "unknown"),
         "final_score": final_score,
         "decision_quality": quality,
@@ -222,6 +270,7 @@ def _run_heuristic_task(env: HireLoopEnv, task_type: str) -> dict:
 # -----------------------------------------------------------------------
 # BASELINE — runs a simple heuristic per task (uses internal session)
 # -----------------------------------------------------------------------
+
 @app.get("/baseline")
 def baseline():
     env = HireLoopEnv()
@@ -247,6 +296,7 @@ def baseline():
 # -----------------------------------------------------------------------
 # TASKS — all 3 tasks with action schemas
 # -----------------------------------------------------------------------
+
 @app.get("/tasks")
 def tasks():
     return {
@@ -325,6 +375,7 @@ def tasks():
 # -----------------------------------------------------------------------
 # EVAL — runs all 3 tasks with baseline heuristic, returns full report
 # -----------------------------------------------------------------------
+
 @app.get("/eval")
 def eval_all():
     env = HireLoopEnv()

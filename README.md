@@ -9,6 +9,8 @@ pinned: false
 
 # HireLoop: A Multi-Step Hiring Environment for Reinforcement Learning
 
+[![Validation](https://img.shields.io/badge/Validation-13%2F13%20Checks%20Passed-brightgreen)](#openenv-validation)
+
 **Author:** Balajee (`balajeein`)
 
 **Live Demo:** https://huggingface.co/spaces/balajeein/hireloop-env  
@@ -373,10 +375,10 @@ curl https://balajeein-hireloop-env.hf.space/baseline
 
 | Task | Heuristic Baseline | Max Possible |
 |------|--------------------|--------------|
-| Resume Screening | ~0.85 | 1.0 |
-| Offer Decision | ~0.50 | 1.0 |
-| Communication | ~0.35–0.45 | 1.0 |
-| **Average** | **~0.57** | **1.0** |
+| Resume Screening | ~0.55 | 1.0 |
+| Offer Decision | ~0.79 | 1.0 |
+| Communication | ~0.45 | 1.0 |
+| **Average** | **~0.60** | **1.0** |
 
 **Decision quality thresholds:**
 - Score >= 0.75 → High quality
@@ -398,10 +400,10 @@ Output includes mean, standard deviation, and best score per task:
 ```
 | Task            |     Mean |   Std (±) |     Best |
 |-----------------|----------|-----------|----------|
-| resume          |   0.8421 |   0.0312  |   0.8800 |
-| offer           |   0.5133 |   0.0421  |   0.5600 |
-| communication   |   0.4012 |   0.0289  |   0.4300 |
-| Overall Mean    |   0.5855 |           |          |
+| resume          |   0.5544 |   0.1416  |   0.6933 |
+| offer           |   0.7899 |   0.0598  |   0.8333 |
+| communication   |   0.4511 |   0.0313  |   0.4750 |
+| Overall Mean    |   0.5985 |           |          |
 ```
 
 Run the automated validation script to verify all endpoints:
@@ -504,7 +506,30 @@ curl http://localhost:7860/health
 
 ## OpenEnv Validation
 
-Run the official validation script to confirm your submission passes all automated checks:
+Run the internal validation script to confirm your server passes all automated checks:
+
+```bash
+./validate.sh http://localhost:7860
+```
+
+Expected output:
+```
+==============================================
+  HireLoop Environment Validation
+==============================================
+  Target: http://localhost:7860
+==============================================
+1. Health check... PASS
+2. GET /tasks... PASS
+...
+13. OpenEnv spec check... PASS
+==============================================
+  Results: 27 passed, 0 failed
+==============================================
+  All checks passed!
+```
+
+To run the official OpenEnv core validator:
 
 \```bash
 pip install openenv-core
@@ -521,27 +546,26 @@ Expected output:
 ## Project Structure
 ```
 hireloop-env/
+├── client.py               # Typed API Client for programatic env interaction 
 ├── hireloop/
-│   ├── __init__.py         # Package init — exports HireLoopEnv, session helpers
-│   ├── env.py              # Thin orchestrator (~200 lines) — delegates to task modules
+│   ├── __init__.py         # Package init — exports HireLoopEnv
+│   ├── env.py              # Environment orchestrator inheriting from openenv Environment ABC
 │   ├── session.py          # UUID-based session store for concurrent access
 │   └── tasks/
 │       ├── __init__.py
 │       ├── resume.py       # Resume screening — reset, step, score, bias audit
 │       ├── offer.py        # Offer decision — SKILL_CATEGORIES, negotiation, step, score
 │       └── communication.py # Communication — UNSAFE_WORDS, email scoring, adversarial detection
-├── api.py                  # FastAPI server — session-based endpoints
-├── models.py               # Pydantic models — Candidate, JobDescription, HireLoopState, Action, StepRequest
+├── api.py                  # FastAPI server — using openenv models + backward compatibility endpoints
+├── models.py               # OpenEnv-core types (HireLoopAction/Observation) + internal Pydantic models
 ├── inference.py            # LLM agent baseline with variance metrics
 ├── scenarios.json          # 13 hiring scenarios with realistic USD salaries
 ├── validate.sh             # Automated validation script (13 checks)
-├── openenv.yaml            # OpenEnv spec metadata with session docs
-├── pyproject.toml          # OpenEnv package configuration
-├── Dockerfile              # Container configuration
+├── openenv.yaml            # OpenEnv spec metadata with framework configs
+├── pyproject.toml          # Package configuration
+├── Dockerfile              # Container configuration (Python 3.11-slim)
 ├── requirements.txt        # Python dependencies
 ├── web_interface.html      # Debug UI
-└── server/
-    └── app.py              # Server entry point for OpenEnv deployment
 ```
 
 ---

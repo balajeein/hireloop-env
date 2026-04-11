@@ -65,22 +65,22 @@ RESET_RESP=$(curl -s -X POST "$ENV_URL/reset")
 SESSION_ID=$(echo "$RESET_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('session_id',''))" 2>/dev/null || echo "")
 check "session_id returned" "[ ! -z '$SESSION_ID' ]"
 
-HAS_JOB=$(echo "$RESET_RESP" | python3 -c "import sys,json; print('job_description' in json.load(sys.stdin).get('state',{}))" 2>/dev/null || echo "")
-check "state has job_description" "[ '$HAS_JOB' = 'True' ]"
+HAS_JOB=$(echo "$RESET_RESP" | python3 -c "import sys,json; print('job_description' in json.load(sys.stdin).get('observation',{}))" 2>/dev/null || echo "")
+check "observation has job_description" "[ '$HAS_JOB' = 'True' ]"
 
-HAS_CANDIDATES=$(echo "$RESET_RESP" | python3 -c "import sys,json; print('candidates' in json.load(sys.stdin).get('state',{}))" 2>/dev/null || echo "")
-check "state has candidates" "[ '$HAS_CANDIDATES' = 'True' ]"
+HAS_CANDIDATES=$(echo "$RESET_RESP" | python3 -c "import sys,json; print('candidates' in json.load(sys.stdin).get('observation',{}))" 2>/dev/null || echo "")
+check "observation has candidates" "[ '$HAS_CANDIDATES' = 'True' ]"
 
-HAS_TASK_TYPE=$(echo "$RESET_RESP" | python3 -c "import sys,json; print('task_type' in json.load(sys.stdin).get('state',{}))" 2>/dev/null || echo "")
-check "state has task_type" "[ '$HAS_TASK_TYPE' = 'True' ]"
+HAS_TASK_TYPE=$(echo "$RESET_RESP" | python3 -c "import sys,json; print('task_type' in json.load(sys.stdin).get('observation',{}))" 2>/dev/null || echo "")
+check "observation has task_type" "[ '$HAS_TASK_TYPE' = 'True' ]"
 
 # -----------------------------------------------------------------------
 # 4. POST /step with accept action — verify response structure
 # -----------------------------------------------------------------------
 echo ""
 echo "4. POST /step"
-TASK_TYPE=$(echo "$RESET_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['task_type'])" 2>/dev/null || echo "")
-FIRST_CID=$(echo "$RESET_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['candidates'][0]['id'])" 2>/dev/null || echo "1")
+TASK_TYPE=$(echo "$RESET_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('task_type',''))" 2>/dev/null || echo "")
+FIRST_CID=$(echo "$RESET_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('candidates',[])[0].get('id','1'))" 2>/dev/null || echo "1")
 
 # Build appropriate action based on task type
 if [ "$TASK_TYPE" = "resume" ]; then
@@ -91,7 +91,7 @@ else
     ACTION='{"type":"write_email","candidate_id":"'"$FIRST_CID"'","content":"Dear Candidate, Thank you for applying. Unfortunately, we have decided not to proceed. We appreciate your interest and wish you the best in your future endeavors. Sincerely, HR Team"}'
 fi
 
-STEP_RESP=$(curl -s -X POST "$ENV_URL/step" -H "Content-Type: application/json" -d "$ACTION")
+STEP_RESP=$(curl -s -X POST "$ENV_URL/step" -H "Content-Type: application/json" -d "{\"session_id\":\"$SESSION_ID\",\"action\":$ACTION}")
 REWARD=$(echo "$STEP_RESP" | python3 -c "import sys,json; r=json.load(sys.stdin)['reward']; print('ok' if -1<=r<=1 else 'bad')" 2>/dev/null || echo "bad")
 check "reward in [-1, 1]" "[ '$REWARD' = 'ok' ]"
 
@@ -116,7 +116,7 @@ check "score in [0, 1]" "[ '$SCORE_OK' = 'ok' ]"
 echo ""
 echo "6. POST /reset?task=resume"
 RESUME_RESP=$(curl -s -X POST "$ENV_URL/reset?task=resume")
-RESUME_TASK=$(echo "$RESUME_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['task_type'])" 2>/dev/null || echo "")
+RESUME_TASK=$(echo "$RESUME_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('task_type',''))" 2>/dev/null || echo "")
 check "task_type == 'resume'" "[ '$RESUME_TASK' = 'resume' ]"
 
 # -----------------------------------------------------------------------
@@ -125,10 +125,10 @@ check "task_type == 'resume'" "[ '$RESUME_TASK' = 'resume' ]"
 echo ""
 echo "7. POST /reset?task=offer"
 OFFER_RESP=$(curl -s -X POST "$ENV_URL/reset?task=offer")
-OFFER_TASK=$(echo "$OFFER_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['task_type'])" 2>/dev/null || echo "")
+OFFER_TASK=$(echo "$OFFER_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('task_type',''))" 2>/dev/null || echo "")
 check "task_type == 'offer'" "[ '$OFFER_TASK' = 'offer' ]"
 
-BUDGET=$(echo "$OFFER_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['budget'])" 2>/dev/null || echo "0")
+BUDGET=$(echo "$OFFER_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('budget',0))" 2>/dev/null || echo "0")
 check "budget > 0" "[ '$BUDGET' -gt 0 ] 2>/dev/null"
 
 # -----------------------------------------------------------------------
@@ -137,7 +137,7 @@ check "budget > 0" "[ '$BUDGET' -gt 0 ] 2>/dev/null"
 echo ""
 echo "8. POST /reset?task=communication"
 COMM_RESP=$(curl -s -X POST "$ENV_URL/reset?task=communication")
-COMM_TASK=$(echo "$COMM_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['task_type'])" 2>/dev/null || echo "")
+COMM_TASK=$(echo "$COMM_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('task_type',''))" 2>/dev/null || echo "")
 check "task_type == 'communication'" "[ '$COMM_TASK' = 'communication' ]"
 
 # -----------------------------------------------------------------------
@@ -200,7 +200,7 @@ S2_ID=$(echo "$S2" | python3 -c "import sys,json; print(json.load(sys.stdin).get
 check "two different session IDs" "[ '$S1_ID' != '$S2_ID' ]"
 
 # Step in session 1
-S1_CID=$(echo "$S1" | python3 -c "import sys,json; print(json.load(sys.stdin)['state']['candidates'][0]['id'])" 2>/dev/null || echo "1")
+S1_CID=$(echo "$S1" | python3 -c "import sys,json; print(json.load(sys.stdin).get('observation',{}).get('candidates',[])[0].get('id','1'))" 2>/dev/null || echo "1")
 S1_STEP=$(curl -s -X POST "$ENV_URL/step" -H "Content-Type: application/json" -d "{\"session_id\":\"$S1_ID\",\"action\":{\"type\":\"accept\",\"candidate_id\":\"$S1_CID\"}}")
 
 # Check session 2 is unaffected (step_count should still be 0)
@@ -215,14 +215,16 @@ echo ""
 echo "13. OpenEnv spec check"
 if [ -f "openenv.yaml" ]; then
     check "openenv.yaml exists" "true"
-    HAS_NAME=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'name' in d else 'no')" 2>/dev/null || echo "no")
-    check "openenv.yaml has 'name' field" "[ '$HAS_NAME' = 'yes' ]"
-    HAS_TASKS=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'tasks' in d else 'no')" 2>/dev/null || echo "no")
-    check "openenv.yaml has 'tasks' field" "[ '$HAS_TASKS' = 'yes' ]"
-    HAS_ENDPOINTS=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'endpoints' in d else 'no')" 2>/dev/null || echo "no")
-    check "openenv.yaml has 'endpoints' field" "[ '$HAS_ENDPOINTS' = 'yes' ]"
-    HAS_SESSION=$(python3 -c "import yaml; d=yaml.safe_load(open('openenv.yaml')); print('yes' if 'session' in d else 'no')" 2>/dev/null || echo "no")
-    check "openenv.yaml has 'session' field" "[ '$HAS_SESSION' = 'yes' ]"
+    HAS_NAME=$(grep -c '^name:' openenv.yaml || echo "0")
+    check "openenv.yaml has 'name' field" "[ '$HAS_NAME' -gt 0 ]"
+    HAS_TASKS=$(grep -c '^tasks:' openenv.yaml || echo "0")
+    check "openenv.yaml has 'tasks' field" "[ '$HAS_TASKS' -gt 0 ]"
+    HAS_ENDPOINTS=$(grep -c '^endpoints:' openenv.yaml || echo "0")
+    check "openenv.yaml has 'endpoints' field" "[ '$HAS_ENDPOINTS' -gt 0 ]"
+    HAS_SESSION=$(grep -c '^session:' openenv.yaml || echo "0")
+    check "openenv.yaml has 'session' field" "[ '$HAS_SESSION' -gt 0 ]"
+    HAS_FRAMEWORK=$(grep -c '^framework:' openenv.yaml || echo "0")
+    check "openenv.yaml has 'framework' field" "[ '$HAS_FRAMEWORK' -gt 0 ]"
 else
     check "openenv.yaml exists" "false"
 fi
