@@ -1,8 +1,15 @@
 ---
+title: HireLoop
+emoji: 🔁
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
 
 # HireLoop: Multi-Step Hiring Pipeline RL Environment
 
-[![OpenEnv](https://img.shields.io/badge/OpenEnv-Core%20Compliant-blue)]() [![Validation](https://img.shields.io/badge/Validation-27%2F27%20Passed-brightgreen)]() [![Sessions](https://img.shields.io/badge/Sessions-UUID%20Isolated-orange)]() [![Python](https://img.shields.io/badge/Python-3.11-blue)]()
+[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-blue)]() [![Validation](https://img.shields.io/badge/Validation-27%2F27_Passed-brightgreen)]() [![Sessions](https://img.shields.io/badge/Sessions-UUID_Isolated-orange)]() [![Python](https://img.shields.io/badge/Python-3.11-blue)]()
 
 **Author:** Balajee (`balajeein`)
 **Live Demo:** https://huggingface.co/spaces/balajeein/hireloop-env
