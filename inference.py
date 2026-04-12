@@ -188,7 +188,7 @@ def run_task(task_type: str) -> dict:
         resp = requests.get(f"{ENV_BASE_URL}/grader", params={"session_id": session_id})
         final_score = resp.json()["score"]
     except Exception:
-        final_score = 0.0
+        final_score = 0.001
     
     # Determine success (threshold: 0.5)
     success = final_score >= 0.5
@@ -271,7 +271,7 @@ def main():
             flush=True,
         )
 
-    overall_mean = sum(all_means) / len(all_means) if all_means else 0.0
+    overall_mean = sum(all_means) / len(all_means) if all_means else 0.001
     print(f"| {'Overall Mean':<15} | {overall_mean:>8.4f} |{'':>11}|{'':>10}|", flush=True)
     print("=" * 60, flush=True)
 
