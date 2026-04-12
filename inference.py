@@ -24,6 +24,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.3-70B-Instruct")
 ENV_BASE_URL = os.getenv("ENV_BASE_URL", "http://localhost:7860")
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "hireloop-env")
 
 client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
@@ -71,7 +72,7 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     success_val = str(success).lower()
     print(
-        f"[END] success={success_val} steps={steps} score={score:.3f} rewards={rewards_str}",
+        f"[END] success={success_val} steps={steps} score={score:.2f} rewards={rewards_str}",
         flush=True,
     )
 
@@ -179,8 +180,8 @@ def run_task(task_type: str) -> dict:
             log_step(step=step, action=action_str, reward=reward, done=done, error=None)
 
         except Exception as e:
-            error_msg = str(e)
-            log_step(step=step, action=action_str, reward=0.0, done=False, error=error_msg)
+            error_msg = str(e).replace("\n", " ").replace("\r", " ")
+            log_step(step=step, action=action_str, reward=0.00, done=False, error=error_msg)
             break
 
     # Get final score using session_id
