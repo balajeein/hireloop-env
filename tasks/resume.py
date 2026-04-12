@@ -7,6 +7,9 @@ Handles reset, step, and scoring logic for the resume screening task.
 from typing import List, Dict, Optional
 from models import Candidate, JobDescription, HireLoopState
 
+MIN_STRICT_SCORE = 0.0001
+MAX_STRICT_SCORE = 0.9999
+
 
 
 def reset(scenario: dict, rng) -> tuple:
@@ -165,8 +168,8 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     correct = set(correct_shortlist)
 
     correct_picks = selected & correct
-    accuracy = len(correct_picks) / len(correct) if correct else 0
-    precision = len(correct_picks) / len(selected) if selected else 0
+    accuracy = min(MAX_STRICT_SCORE, len(correct_picks) / len(correct) if correct else MIN_STRICT_SCORE)
+    precision = min(MAX_STRICT_SCORE, len(correct_picks) / len(selected) if selected else MIN_STRICT_SCORE)
 
     # Speed bonus
     steps_used = state.step_count
@@ -181,7 +184,7 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     bias_penalty = bias_result["penalty"]
 
     final = (accuracy * 0.5) + (precision * 0.3) + speed_bonus - wrong_penalty + bias_penalty
-    return max(0.001, min(0.999, round(final, 4))), bias_result
+    return round(min(MAX_STRICT_SCORE, max(MIN_STRICT_SCORE, final)), 4), bias_result
 
 
 

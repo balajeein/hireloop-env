@@ -47,6 +47,9 @@ except (ImportError, TypeError):
 from tasks import resume, offer, communication
 from utils.skills import check_negotiation_eligibility
 
+MIN_STRICT_SCORE = 0.0001
+MAX_STRICT_SCORE = 0.9999
+
 
 class HireLoopEnv(Environment):
     """
@@ -235,7 +238,7 @@ class HireLoopEnv(Environment):
     def compute_final_score(self) -> float:
         """Compute the final episode score (0.0–1.0)."""
         if self._state is None:
-            return 0.001
+            return MIN_STRICT_SCORE
 
         task = self._state.task_type
 
@@ -246,17 +249,19 @@ class HireLoopEnv(Environment):
             # resume.score returns (score, bias_result) tuple
             score_val, bias_result = result
             self._last_bias_explanation = bias_result["explanation"]
-            return score_val
+            return round(min(MAX_STRICT_SCORE, max(MIN_STRICT_SCORE, score_val)), 4)
         elif task == "offer":
-            return offer.score(
+            score = offer.score(
                 self._state, self.correct_shortlist, self.max_steps
             )
+            return round(min(MAX_STRICT_SCORE, max(MIN_STRICT_SCORE, score)), 4)
         elif task == "communication":
-            return communication.score(
+            score = communication.score(
                 self._state, self.correct_shortlist, self.max_steps
             )
+            return round(min(MAX_STRICT_SCORE, max(MIN_STRICT_SCORE, score)), 4)
         else:
-            return 0.001
+            return MIN_STRICT_SCORE
 
 
     def state_view(self):

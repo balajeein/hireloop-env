@@ -10,6 +10,9 @@ from typing import List, Dict, Optional
 from models import Candidate, JobDescription, HireLoopState
 from utils.email_scorer import UNSAFE_WORDS, POLITE_PHRASES, score_email
 
+MIN_STRICT_SCORE = 0.0001
+MAX_STRICT_SCORE = 0.9999
+
 
 
 
@@ -200,7 +203,7 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
 def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) -> float:
     """Compute final episode score for communication drafting."""
     if not state.emails_sent:
-        return 0.001
+        return MIN_STRICT_SCORE
 
     email_scores = []
     context_scores = []
@@ -209,7 +212,7 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
         breakdown = score_email(email["content"], email["candidate_id"], state)
 
         # Normalize individual email score to 0-1
-        normalized = max(0.001, min(0.999, (breakdown["total"] + 1.0) / 2.0))
+        normalized = max(MIN_STRICT_SCORE, min(MAX_STRICT_SCORE, (breakdown["total"] + 1.0) / 2.0))
         email_scores.append(normalized)
 
         # Track context awareness separately
@@ -221,14 +224,14 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
             breakdown.get("encouragement", 0.0)
         )
         # Normalize context score to 0-1 (max possible is 0.6)
-        context_normalized = min(0.999, context / 0.6)
+        context_normalized = min(MAX_STRICT_SCORE, context / 0.6)
         context_scores.append(context_normalized)
 
     avg_email_score = sum(email_scores) / len(email_scores) if email_scores else 0
     avg_context_score = sum(context_scores) / len(context_scores) if context_scores else 0
 
     # Coverage: how many candidates got emails
-    coverage = len(state.emails_sent) / len(state.candidates) if state.candidates else 0
+    coverage = min(MAX_STRICT_SCORE, len(state.emails_sent) / len(state.candidates) if state.candidates else MIN_STRICT_SCORE)
 
     # Counterfactual audit: did the agent handle the adversarial candidate?
     adv_handled = any(e["candidate_id"] == "adv1" for e in state.emails_sent)
@@ -237,4 +240,4 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     # Context awareness now has significant weight
     # Agent cannot score well with template emails alone
     final = (avg_email_score * 0.35) + (avg_context_score * 0.35) + (coverage * 0.2) + audit_bonus
-    return max(0.001, min(0.999, round(final, 4)))
+    return round(min(MAX_STRICT_SCORE, max(MIN_STRICT_SCORE, final)), 4)

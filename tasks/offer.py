@@ -12,6 +12,9 @@ from utils.skills import (
     are_skills_similar, check_negotiation_eligibility
 )
 
+MIN_STRICT_SCORE = 0.0001
+MAX_STRICT_SCORE = 0.9999
+
 
 def reset(scenario: dict, rng) -> tuple:
     """
@@ -337,7 +340,7 @@ def step(state: HireLoopState, action: Dict, correct_shortlist: List[str],
 def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) -> float:
     """Compute final episode score for offer decision."""
     if not state.offers_made:
-        return 0.001
+        return MIN_STRICT_SCORE
 
     job_skills = set(state.job_description.required_skills)
 
@@ -352,12 +355,12 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
             actual_salary = offer.get("actual_salary", cand.expected_salary)
             total_salary += actual_salary
 
-    avg_fit = sum(fit_scores) / len(fit_scores) if fit_scores else 0
+    avg_fit = min(MAX_STRICT_SCORE, sum(fit_scores) / len(fit_scores) if fit_scores else MIN_STRICT_SCORE)
 
     # Budget efficiency
     budget = state.budget or 1
     if total_salary <= budget:
-        budget_score = 1.0 - (total_salary / budget) * 0.5
+        budget_score = min(MAX_STRICT_SCORE, 1.0 - (total_salary / budget) * 0.5)
     else:
         # Over-budget penalty
         overage_ratio = (total_salary - budget) / budget
@@ -368,4 +371,4 @@ def score(state: HireLoopState, correct_shortlist: List[str], max_steps: int) ->
     speed_bonus = max(0, (max_steps - steps_used) / max_steps) * 0.1
 
     final = (avg_fit * 0.5) + (budget_score * 0.4) + speed_bonus
-    return max(0.001, min(0.999, round(final, 4)))
+    return round(min(MAX_STRICT_SCORE, max(MIN_STRICT_SCORE, final)), 4)
