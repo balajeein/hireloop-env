@@ -10,8 +10,8 @@ from typing import List, Dict, Optional
 from models import Candidate, JobDescription, HireLoopState
 from utils.email_scorer import UNSAFE_WORDS, POLITE_PHRASES, score_email
 
-MIN_STRICT_SCORE = 0.0001
-MAX_STRICT_SCORE = 0.9999
+MIN_STRICT_SCORE = 0.01
+MAX_STRICT_SCORE = 0.99
 
 
 

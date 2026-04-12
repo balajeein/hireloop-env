@@ -47,8 +47,8 @@ except (ImportError, TypeError):
 from tasks import resume, offer, communication
 from utils.skills import check_negotiation_eligibility
 
-MIN_STRICT_SCORE = 0.0001
-MAX_STRICT_SCORE = 0.9999
+MIN_STRICT_SCORE = 0.01
+MAX_STRICT_SCORE = 0.99
 
 
 class HireLoopEnv(Environment):

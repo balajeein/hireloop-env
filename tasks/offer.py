@@ -12,8 +12,8 @@ from utils.skills import (
     are_skills_similar, check_negotiation_eligibility
 )
 
-MIN_STRICT_SCORE = 0.0001
-MAX_STRICT_SCORE = 0.9999
+MIN_STRICT_SCORE = 0.01
+MAX_STRICT_SCORE = 0.99
 
 
 def reset(scenario: dict, rng) -> tuple:

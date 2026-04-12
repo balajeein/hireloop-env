@@ -7,8 +7,8 @@ Handles reset, step, and scoring logic for the resume screening task.
 from typing import List, Dict, Optional
 from models import Candidate, JobDescription, HireLoopState
 
-MIN_STRICT_SCORE = 0.0001
-MAX_STRICT_SCORE = 0.9999
+MIN_STRICT_SCORE = 0.01
+MAX_STRICT_SCORE = 0.99
 
 
 
