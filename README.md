@@ -271,16 +271,20 @@ hireloop-env/
 ├── examples/
 │   └── quickstart.py             # Basic usage examples
 ├── server/
+│   ├── __init__.py               # Server package init
 │   ├── app.py                    # OpenEnv create_fastapi_app entry point
 │   ├── env.py                    # HireLoopEnv — inherits Environment ABC
 │   └── Dockerfile                # Server container definition
 ├── tasks/
+│   ├── __init__.py               # Tasks package init
 │   ├── resume.py                 # Resume screening — reset, step, score, bias audit
 │   ├── offer.py                  # Offer decision — negotiation, budget rules
 │   └── communication.py          # Rejection emails — scoring, adversarial detection
 ├── utils/
+│   ├── __init__.py               # Utils package init
 │   ├── skills.py                 # SKILL_CATEGORIES, negotiation eligibility
 │   └── email_scorer.py           # UNSAFE_WORDS, email scoring
+├── __init__.py                   # Root package init
 ├── client.py                     # Typed Python API client
 ├── api.py                        # FastAPI routes — all endpoints
 ├── models.py                     # HireLoopAction, HireLoopObservation, HireLoopState
